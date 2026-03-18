@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import Logo from '../components/Logo';
-import { getAllPuzzles } from '../lib/puzzles';
+import { getAllPuzzlesAsync } from '../lib/puzzles';
 
-export default function HomePage() {
-  const puzzles = getAllPuzzles();
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const puzzles = await getAllPuzzlesAsync();
 
   return (
     <div className="flex flex-col items-center min-h-screen px-4 py-8 max-w-lg mx-auto">
@@ -42,9 +44,16 @@ export default function HomePage() {
                 <div className="flex gap-1">
                   {[0, 1, 2, 3].map(i => (
                     <div
-                      key={i}
+                      key={`r${i}`}
                       className="w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: `var(--cat-${i})` }}
+                      style={{ backgroundColor: `var(--row-${i})` }}
+                    />
+                  ))}
+                  {[0, 1, 2, 3].map(i => (
+                    <div
+                      key={`c${i}`}
+                      className="w-3 h-3 rounded-sm"
+                      style={{ backgroundColor: `var(--col-${i})` }}
                     />
                   ))}
                 </div>

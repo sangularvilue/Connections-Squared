@@ -1,10 +1,148 @@
-import { Puzzle } from '../types';
+import { Puzzle, Category } from '../types';
 
-// Demo puzzles — in production, these would come from a database.
-// Each word belongs to exactly 1 row group AND 1 column group.
-// matrix[r][c] is the unique word at the intersection of rows[r] and columns[c].
+// === Supabase-backed puzzle fetching ===
 
-const PUZZLES: Puzzle[] = [
+let supabaseClient: any = null;
+
+async function getSupabase() {
+  if (supabaseClient) return supabaseClient;
+  try {
+    const { supabase } = await import('./supabase');
+    supabaseClient = supabase;
+    return supabase;
+  } catch {
+    return null;
+  }
+}
+
+function parseDbPuzzle(row: any): Puzzle {
+  return {
+    id: row.id,
+    date: row.date,
+    title: row.title,
+    rows: row.rows as Category[],
+    columns: row.columns as Category[],
+    matrix: row.matrix as string[][],
+  };
+}
+
+export async function getAllPuzzlesAsync(): Promise<Puzzle[]> {
+  const sb = await getSupabase();
+  if (sb) {
+    const { data, error } = await sb
+      .from('puzzles')
+      .select('*')
+      .eq('published', true)
+      .order('date', { ascending: false });
+    if (!error && data && data.length > 0) {
+      return data.map(parseDbPuzzle);
+    }
+  }
+  // Fallback to hardcoded
+  return [...FALLBACK_PUZZLES].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export async function getPuzzleAsync(id: string): Promise<Puzzle | undefined> {
+  const sb = await getSupabase();
+  if (sb) {
+    const { data, error } = await sb
+      .from('puzzles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (!error && data) {
+      return parseDbPuzzle(data);
+    }
+  }
+  return FALLBACK_PUZZLES.find(p => p.id === id);
+}
+
+// === Admin functions ===
+
+export async function savePuzzle(puzzle: Puzzle): Promise<{ error?: string }> {
+  const sb = await getSupabase();
+  if (!sb) return { error: 'Supabase not configured' };
+
+  const { error } = await sb
+    .from('puzzles')
+    .upsert({
+      id: puzzle.id,
+      date: puzzle.date,
+      title: puzzle.title,
+      rows: puzzle.rows,
+      columns: puzzle.columns,
+      matrix: puzzle.matrix,
+      published: true,
+      updated_at: new Date().toISOString(),
+    });
+
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function deletePuzzle(id: string): Promise<{ error?: string }> {
+  const sb = await getSupabase();
+  if (!sb) return { error: 'Supabase not configured' };
+
+  const { error } = await sb.from('puzzles').delete().eq('id', id);
+  if (error) return { error: error.message };
+  return {};
+}
+
+// === Sync helpers (for client components that already have data) ===
+
+export function getAllWords(puzzle: Puzzle): string[] {
+  return puzzle.matrix.flat();
+}
+
+export function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+export function validatePuzzle(puzzle: Puzzle): string[] {
+  const errors: string[] = [];
+
+  if (puzzle.rows.length !== 4) errors.push('Must have exactly 4 row groups');
+  if (puzzle.columns.length !== 4) errors.push('Must have exactly 4 column groups');
+  if (puzzle.matrix.length !== 4) errors.push('Matrix must have 4 rows');
+
+  const allWords = new Set<string>();
+  for (const row of puzzle.matrix) {
+    if (row.length !== 4) errors.push('Each matrix row must have 4 words');
+    for (const word of row) {
+      if (!word) errors.push('All cells must be filled');
+      if (allWords.has(word)) errors.push(`Duplicate word: ${word}`);
+      allWords.add(word);
+    }
+  }
+
+  for (let r = 0; r < 4; r++) {
+    const matrixRow = new Set(puzzle.matrix[r]);
+    const groupWords = new Set(puzzle.rows[r]?.words);
+    if (![...matrixRow].every(w => groupWords.has(w))) {
+      errors.push(`Row ${r} group words don't match matrix row`);
+    }
+  }
+
+  for (let c = 0; c < 4; c++) {
+    const matrixCol = new Set([0, 1, 2, 3].map(r => puzzle.matrix[r]?.[c]));
+    const groupWords = new Set(puzzle.columns[c]?.words);
+    if (![...matrixCol].every(w => groupWords.has(w))) {
+      errors.push(`Column ${c} group words don't match matrix column`);
+    }
+  }
+
+  return errors;
+}
+
+// === Fallback hardcoded puzzle ===
+
+const FALLBACK_PUZZLES: Puzzle[] = [
   {
     id: 'demo-1',
     date: '2026-03-17',
@@ -29,66 +167,3 @@ const PUZZLES: Puzzle[] = [
     ],
   },
 ];
-
-export function getAllPuzzles(): Puzzle[] {
-  return [...PUZZLES].sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export function getPuzzle(id: string): Puzzle | undefined {
-  return PUZZLES.find(p => p.id === id);
-}
-
-export function getLatestPuzzle(): Puzzle | undefined {
-  return getAllPuzzles()[0];
-}
-
-export function getAllWords(puzzle: Puzzle): string[] {
-  return puzzle.matrix.flat();
-}
-
-export function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// Validate that a puzzle matrix is consistent with its row/column definitions
-export function validatePuzzle(puzzle: Puzzle): string[] {
-  const errors: string[] = [];
-
-  if (puzzle.rows.length !== 4) errors.push('Must have exactly 4 row groups');
-  if (puzzle.columns.length !== 4) errors.push('Must have exactly 4 column groups');
-  if (puzzle.matrix.length !== 4) errors.push('Matrix must have 4 rows');
-
-  const allWords = new Set<string>();
-  for (const row of puzzle.matrix) {
-    if (row.length !== 4) errors.push('Each matrix row must have 4 words');
-    for (const word of row) {
-      if (allWords.has(word)) errors.push(`Duplicate word: ${word}`);
-      allWords.add(word);
-    }
-  }
-
-  // Check row groups match matrix rows
-  for (let r = 0; r < 4; r++) {
-    const matrixRow = new Set(puzzle.matrix[r]);
-    const groupWords = new Set(puzzle.rows[r]?.words);
-    if (matrixRow.size !== groupWords.size || ![...matrixRow].every(w => groupWords.has(w))) {
-      errors.push(`Row ${r} group words don't match matrix row`);
-    }
-  }
-
-  // Check column groups match matrix columns
-  for (let c = 0; c < 4; c++) {
-    const matrixCol = new Set([0, 1, 2, 3].map(r => puzzle.matrix[r]?.[c]));
-    const groupWords = new Set(puzzle.columns[c]?.words);
-    if (matrixCol.size !== groupWords.size || ![...matrixCol].every(w => groupWords.has(w))) {
-      errors.push(`Column ${c} group words don't match matrix column`);
-    }
-  }
-
-  return errors;
-}

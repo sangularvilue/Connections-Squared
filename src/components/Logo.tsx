@@ -59,7 +59,7 @@ export default function Logo({ size = 'large' }: { size?: 'large' | 'small' }) {
             style={{
               fontSize: supSize,
               top: '0px',
-              right: size === 'large' ? '0px' : '-4px',
+              left: `calc(50% + ${size === 'large' ? '84px' : '60px'})`,
               color: 'var(--foreground)',
             }}
           >

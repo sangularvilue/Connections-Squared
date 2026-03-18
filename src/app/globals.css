@@ -26,10 +26,18 @@
   --border: #e0e0d8;
   --muted: #6b6b60;
 
-  --cat-0: #f9df6d;
-  --cat-1: #a0c35a;
-  --cat-2: #b0c4ef;
-  --cat-3: #ba81c5;
+  /* Row colors (warm tones) */
+  --row-0: #f9df6d;
+  --row-1: #f4a259;
+  --row-2: #e07a7a;
+  --row-3: #d4a0d4;
+
+  /* Column colors (cool tones) */
+  --col-0: #a0c35a;
+  --col-1: #6ec6c6;
+  --col-2: #7ea8e0;
+  --col-3: #b0a0e0;
+
   --cat-text: #1a1a1a;
 }
 

@@ -66,9 +66,18 @@ export default function SolvedDisplay({
   }
 
   // Both: matrix layout
-  // Columns shown: solved cols in solve order, then unsolved cols in original order
+  // Columns: solved cols first (in solve order), then unsolved cols in original order
   const unsolvedColOrder = [0, 1, 2, 3].filter(i => !solvedCols.has(i));
   const fullColOrder = [...colOrder, ...unsolvedColOrder];
+
+  // Rows: solved rows first (in solve order), then any unsolved rows that have
+  // at least one word visible (because a solved column passes through them)
+  const unsolvedRowOrder = [0, 1, 2, 3].filter(i => !solvedRows.has(i));
+  // An unsolved row is visible if any of its words are in a solved column
+  const visibleUnsolvedRows = unsolvedRowOrder.filter(ri =>
+    [0, 1, 2, 3].some(ci => solvedCols.has(ci))
+  );
+  const fullRowOrder = [...rowOrder, ...visibleUnsolvedRows];
 
   return (
     <div className="w-full" style={{ animation: 'fadeIn 0.3s ease-out' }}>
@@ -103,12 +112,13 @@ export default function SolvedDisplay({
           );
         })}
 
-        {/* Rows */}
-        {rowOrder.map(ri => (
+        {/* Rows — both solved and unsolved rows that intersect solved columns */}
+        {fullRowOrder.map(ri => (
           <MatrixRow
             key={`row-${ri}`}
             puzzle={puzzle}
             rowIdx={ri}
+            rowSolved={solvedRows.has(ri)}
             colOrder={fullColOrder}
             solvedCols={solvedCols}
             selected={selected}
@@ -123,6 +133,7 @@ export default function SolvedDisplay({
 function MatrixRow({
   puzzle,
   rowIdx,
+  rowSolved,
   colOrder,
   solvedCols,
   selected,
@@ -130,6 +141,7 @@ function MatrixRow({
 }: {
   puzzle: Puzzle;
   rowIdx: number;
+  rowSolved: boolean;
   colOrder: number[];
   solvedCols: Set<number>;
   selected: Set<string>;
@@ -138,18 +150,23 @@ function MatrixRow({
   const row = puzzle.rows[rowIdx];
   return (
     <>
-      <div
-        className="rounded-l-lg px-1.5 py-1.5 flex items-center justify-center text-center"
-        style={{
-          backgroundColor: COLORS[row.difficulty],
-          color: 'var(--cat-text)',
-          minHeight: '48px',
-        }}
-      >
-        <span className="font-bold text-[9px] uppercase tracking-wide leading-tight">
-          {row.theme}
-        </span>
-      </div>
+      {/* Row header: only show if row is solved */}
+      {rowSolved ? (
+        <div
+          className="rounded-l-lg px-1.5 py-1.5 flex items-center justify-center text-center"
+          style={{
+            backgroundColor: COLORS[row.difficulty],
+            color: 'var(--cat-text)',
+            minHeight: '48px',
+          }}
+        >
+          <span className="font-bold text-[9px] uppercase tracking-wide leading-tight">
+            {row.theme}
+          </span>
+        </div>
+      ) : (
+        <div style={{ minHeight: '48px' }} />
+      )}
 
       {colOrder.map(ci => {
         const word = puzzle.matrix[rowIdx][ci];
@@ -158,20 +175,28 @@ function MatrixRow({
         const rowColor = COLORS[row.difficulty];
         const colColor = COLORS[puzzle.columns[ci].difficulty];
 
+        // Only show this cell if the row OR column is solved
+        const visible = rowSolved || colSolved;
+        if (!visible) return <div key={`cell-${rowIdx}-${ci}`} />;
+
+        const bg = rowSolved && colSolved
+          ? `linear-gradient(135deg, ${rowColor} 40%, ${colColor} 60%)`
+          : rowSolved
+          ? rowColor
+          : colColor;
+
         return (
           <button
             key={`cell-${rowIdx}-${ci}`}
             onClick={() => onWordClick(word)}
             className="rounded-md flex items-center justify-center font-bold text-xs uppercase cursor-pointer transition-all duration-150 select-none border-0"
             style={{
-              background: colSolved
-                ? `linear-gradient(135deg, ${rowColor} 40%, ${colColor} 60%)`
-                : rowColor,
+              background: bg,
               color: 'var(--cat-text)',
               minHeight: '48px',
               outline: isSelected ? '3px solid var(--foreground)' : 'none',
               outlineOffset: '-3px',
-              opacity: colSolved ? 1 : 0.75,
+              opacity: (rowSolved && colSolved) ? 1 : 0.8,
               fontSize: word.length > 7 ? '10px' : '12px',
             }}
           >
