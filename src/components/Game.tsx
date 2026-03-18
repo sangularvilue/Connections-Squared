@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Puzzle } from '../types';
 import { useGame, GridCell } from '../useGame';
 import Logo from './Logo';
+import HowToPlay from './HowToPlay';
 
 const ROW_COLORS = ['var(--row-0)', 'var(--row-1)', 'var(--row-2)', 'var(--row-3)'];
 const COL_COLORS = ['var(--col-0)', 'var(--col-1)', 'var(--col-2)', 'var(--col-3)'];
@@ -194,6 +195,8 @@ function GameInner({ puzzle }: { puzzle: Puzzle }) {
       <div className="mt-3 text-xs opacity-40">
         Guesses: {guesses}
       </div>
+
+      <HowToPlay />
     </div>
   );
 }
