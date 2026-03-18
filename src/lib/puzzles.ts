@@ -61,7 +61,7 @@ export async function getPuzzleAsync(id: string): Promise<Puzzle | undefined> {
 
 // === Admin functions ===
 
-export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorName?: string }): Promise<{ error?: string }> {
+export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorName?: string; isPrivate?: boolean }): Promise<{ error?: string }> {
   const sb = await getSupabase();
   if (!sb) return { error: 'Supabase not configured' };
 
@@ -74,7 +74,7 @@ export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorN
       rows: puzzle.rows,
       columns: puzzle.columns,
       matrix: puzzle.matrix,
-      published: true,
+      published: !puzzle.isPrivate,
       is_custom: puzzle.isCustom || false,
       creator_name: puzzle.creatorName || null,
       updated_at: new Date().toISOString(),

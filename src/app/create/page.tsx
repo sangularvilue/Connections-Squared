@@ -5,36 +5,37 @@ import { useRouter } from 'next/navigation';
 import Logo from '../../components/Logo';
 import PuzzleBuilder from '../../components/PuzzleBuilder';
 import { Puzzle } from '../../types';
-import { encodePuzzle, getPuzzleShareUrl } from '../../lib/puzzle-codec';
 import { savePuzzle } from '../../lib/puzzles';
 
 export default function CreatePage() {
   const router = useRouter();
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [publishToGallery, setPublishToGallery] = useState(true);
+  const [puzzleId, setPuzzleId] = useState<string | null>(null);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [creatorName, setCreatorName] = useState('');
   const [status, setStatus] = useState('');
 
   const handleCreate = async (puzzle: Puzzle) => {
-    const url = getPuzzleShareUrl(puzzle);
-    setShareUrl(url);
+    const id = `custom-${Date.now()}`;
+    const result = await savePuzzle({
+      ...puzzle,
+      id,
+      title: puzzle.title || 'Untitled',
+      isCustom: true,
+      creatorName: creatorName || 'Anonymous',
+      isPrivate,
+    });
 
-    if (publishToGallery) {
-      const galleryPuzzle = {
-        ...puzzle,
-        id: `custom-${Date.now()}`,
-        title: puzzle.title || 'Untitled',
-        isCustom: true,
-        creatorName: creatorName || 'Anonymous',
-      };
-      const result = await savePuzzle(galleryPuzzle);
-      if (result.error) {
-        setStatus(`Saved link only (gallery error: ${result.error})`);
-      } else {
-        setStatus('Published to gallery!');
-      }
+    if (result.error) {
+      setStatus(`Error: ${result.error}`);
+      return;
     }
+
+    setPuzzleId(id);
   };
+
+  const shareUrl = puzzleId
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/play/${puzzleId}`
+    : null;
 
   const copyLink = () => {
     if (shareUrl) {
@@ -52,7 +53,7 @@ export default function CreatePage() {
         Build your own Connections² puzzle and share it with friends
       </p>
 
-      {!shareUrl ? (
+      {!puzzleId ? (
         <PuzzleBuilder
           onSave={handleCreate}
           saveLabel="Create Puzzle"
@@ -69,12 +70,15 @@ export default function CreatePage() {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={!publishToGallery}
-                onChange={e => setPublishToGallery(!e.target.checked)}
+                checked={isPrivate}
+                onChange={e => setIsPrivate(e.target.checked)}
                 className="cursor-pointer"
               />
-              Private (link only — not listed in gallery)
+              Private (shareable via link, but not listed in gallery)
             </label>
+            {status && (
+              <div className="text-xs font-semibold" style={{ color: '#c04040' }}>{status}</div>
+            )}
           </div>
         </PuzzleBuilder>
       ) : (
@@ -85,7 +89,7 @@ export default function CreatePage() {
           >
             <div className="text-lg font-bold mb-2">Puzzle Created!</div>
             <p className="text-sm opacity-60 mb-4">
-              {publishToGallery ? 'Published to gallery and ready to share' : 'Private — share the link below'}
+              {isPrivate ? 'Private — only people with the link can find it' : 'Published to gallery'}
             </p>
 
             <div
@@ -104,7 +108,7 @@ export default function CreatePage() {
                 Copy Link
               </button>
               <button
-                onClick={() => router.push(shareUrl!.replace(window.location.origin, ''))}
+                onClick={() => router.push(`/play/${puzzleId}`)}
                 className="px-5 py-2.5 rounded-full font-semibold text-sm cursor-pointer border"
                 style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
               >
@@ -120,7 +124,7 @@ export default function CreatePage() {
           </div>
 
           <button
-            onClick={() => { setShareUrl(null); setStatus(''); }}
+            onClick={() => { setPuzzleId(null); setStatus(''); }}
             className="text-sm cursor-pointer underline"
             style={{ color: 'var(--muted)', background: 'none', border: 'none' }}
           >
