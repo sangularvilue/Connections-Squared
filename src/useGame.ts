@@ -197,12 +197,43 @@ export function useGame(puzzle: Puzzle) {
       const newSolvedColList = [...solvedColList];
       if (match.partition === 'row') {
         newSolvedRowList.push(match.index);
-        setSolvedRowList(newSolvedRowList);
       } else {
         newSolvedColList.push(match.index);
-        setSolvedColList(newSolvedColList);
       }
-      const newSolvedOrder = [...solvedOrder, match];
+      let newSolvedOrder = [...solvedOrder, match];
+
+      // Auto-complete the other dimension if one is fully solved
+      if (newSolvedRowList.length === 4 && newSolvedColList.length < 4) {
+        for (let c = 0; c < 4; c++) {
+          if (!new Set(newSolvedColList).has(c)) {
+            newSolvedColList.push(c);
+            newSolvedOrder.push({
+              partition: 'col',
+              index: c,
+              theme: puzzle.columns[c].theme,
+              words: puzzle.columns[c].words,
+              difficulty: puzzle.columns[c].difficulty,
+            });
+          }
+        }
+      }
+      if (newSolvedColList.length === 4 && newSolvedRowList.length < 4) {
+        for (let r = 0; r < 4; r++) {
+          if (!new Set(newSolvedRowList).has(r)) {
+            newSolvedRowList.push(r);
+            newSolvedOrder.push({
+              partition: 'row',
+              index: r,
+              theme: puzzle.rows[r].theme,
+              words: puzzle.rows[r].words,
+              difficulty: puzzle.rows[r].difficulty,
+            });
+          }
+        }
+      }
+
+      setSolvedRowList(newSolvedRowList);
+      setSolvedColList(newSolvedColList);
       setSolvedOrder(newSolvedOrder);
       setSelected(new Set());
 
