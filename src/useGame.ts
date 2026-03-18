@@ -26,6 +26,8 @@ export function useGame(puzzle: Puzzle) {
   const [unsolvedShuffle, setUnsolvedShuffle] = useState<string[]>([]);
   // For shuffling solved-col words in unsolved rows (keyed by col index)
   const [colShuffles, setColShuffles] = useState<Record<number, string[]>>({});
+  // For shuffling solved-row words in unsolved cols (keyed by row index)
+  const [rowShuffles, setRowShuffles] = useState<Record<number, string[]>>({});
 
   const solvedRows = useMemo(() => new Set(solvedRowList), [solvedRowList]);
   const solvedCols = useMemo(() => new Set(solvedColList), [solvedColList]);
@@ -50,7 +52,15 @@ export function useGame(puzzle: Puzzle) {
       newColShuffles[ci] = shuffleArray(unsolvedRowIdxs.map(ri => puzzle.matrix[ri][ci]));
     }
     setColShuffles(newColShuffles);
-  }, [puzzle, solvedRows, solvedCols, solvedColList]);
+
+    // For each solved row, shuffle the unsolved-col words within that row
+    const unsolvedColIdxs = [0, 1, 2, 3].filter(c => !solvedCols.has(c));
+    const newRowShuffles: Record<number, string[]> = {};
+    for (const ri of solvedRowList) {
+      newRowShuffles[ri] = shuffleArray(unsolvedColIdxs.map(ci => puzzle.matrix[ri][ci]));
+    }
+    setRowShuffles(newRowShuffles);
+  }, [puzzle, solvedRows, solvedCols, solvedColList, solvedRowList]);
 
   const gameOver = solvedRowList.length === 4 && solvedColList.length === 4;
 
@@ -83,11 +93,15 @@ export function useGame(puzzle: Puzzle) {
             colDifficulty: puzzle.columns[actualCol].difficulty,
           });
         } else if (dr < nSR) {
-          // Solved row, unsolved col — locked in row
+          // Solved row, unsolved col — stays in row but column order shuffled
           const actualRow = solvedRowList[dr];
-          const actualCol = unsolvedColIndices[dc - nSC];
+          const word = (rowShuffles[actualRow] || [])[dc - nSC] || '';
+          let actualCol = 0;
+          for (const ci of unsolvedColIndices) {
+            if (puzzle.matrix[actualRow][ci] === word) { actualCol = ci; break; }
+          }
           row.push({
-            word: puzzle.matrix[actualRow][actualCol],
+            word,
             rowSolved: true,
             colSolved: false,
             rowDifficulty: puzzle.rows[actualRow].difficulty,
@@ -129,7 +143,7 @@ export function useGame(puzzle: Puzzle) {
       result.push(row);
     }
     return result;
-  }, [puzzle, solvedRowList, solvedColList, solvedRows, solvedCols, unsolvedShuffle, colShuffles]);
+  }, [puzzle, solvedRowList, solvedColList, solvedRows, solvedCols, unsolvedShuffle, colShuffles, rowShuffles]);
 
   // Row/col theme headers for the display
   const rowHeaders = useMemo(() => {
@@ -173,12 +187,14 @@ export function useGame(puzzle: Puzzle) {
 
   const shuffle = useCallback(() => {
     setUnsolvedShuffle(prev => shuffleArray(prev));
-    // Also re-shuffle solved-column orderings
     setColShuffles(prev => {
       const next: Record<number, string[]> = {};
-      for (const [ci, words] of Object.entries(prev)) {
-        next[Number(ci)] = shuffleArray(words);
-      }
+      for (const [k, words] of Object.entries(prev)) next[Number(k)] = shuffleArray(words);
+      return next;
+    });
+    setRowShuffles(prev => {
+      const next: Record<number, string[]> = {};
+      for (const [k, words] of Object.entries(prev)) next[Number(k)] = shuffleArray(words);
       return next;
     });
   }, []);
