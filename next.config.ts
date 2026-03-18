@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable turbopack for build (UNC path issues on network drives)
+  experimental: {
+    turbo: undefined,
+  },
 };
 
 export default nextConfig;
