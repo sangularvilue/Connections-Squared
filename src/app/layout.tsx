@@ -38,9 +38,10 @@ export default function RootLayout({
           className="flex items-center px-4 py-2"
           style={{ borderBottom: '1px solid var(--border)' }}
         >
-          <Link href="/" className="flex items-baseline gap-0.5 no-underline" style={{ color: 'var(--foreground)' }}>
-            <span style={{ fontFamily: 'var(--font-fraktur)', fontSize: '24px', lineHeight: 1 }}>G</span>
-            <span style={{ fontFamily: 'var(--font-serif)', fontSize: '14px', fontWeight: 700, letterSpacing: '-0.01em' }}>Games</span>
+          <Link href="/" className="flex items-center no-underline" style={{ color: 'var(--foreground)', gap: '6px' }}>
+            <span style={{ fontFamily: 'var(--font-fraktur)', fontSize: '36px', lineHeight: 1 }}>G</span>
+            <span style={{ width: '1px', height: '24px', backgroundColor: 'var(--foreground)', opacity: 0.3 }} />
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', fontWeight: 700, letterSpacing: '-0.01em' }}>Games</span>
           </Link>
         </header>
         {children}
