@@ -1,11 +1,24 @@
 import type { Metadata } from 'next';
-import { Libre_Franklin } from 'next/font/google';
+import { Libre_Franklin, UnifrakturCook, Noto_Serif } from 'next/font/google';
+import Link from 'next/link';
 import './globals.css';
 
 const libre = Libre_Franklin({
   variable: '--font-libre',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
+});
+
+const fraktur = UnifrakturCook({
+  variable: '--font-fraktur',
+  subsets: ['latin'],
+  weight: '700',
+});
+
+const serif = Noto_Serif({
+  variable: '--font-serif',
+  subsets: ['latin'],
+  weight: ['400', '700'],
 });
 
 export const metadata: Metadata = {
@@ -20,7 +33,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${libre.className} antialiased`}>
+      <body className={`${libre.className} ${fraktur.variable} ${serif.variable} antialiased`}>
+        <header
+          className="flex items-center px-4 py-2"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <Link href="/" className="flex items-baseline gap-0.5 no-underline" style={{ color: 'var(--foreground)' }}>
+            <span style={{ fontFamily: 'var(--font-fraktur)', fontSize: '24px', lineHeight: 1 }}>G</span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: '14px', fontWeight: 700, letterSpacing: '-0.01em' }}>Games</span>
+          </Link>
+        </header>
         {children}
       </body>
     </html>
