@@ -28,13 +28,13 @@ export function useGame(puzzle: Puzzle) {
   const solvedRows = useMemo(() => new Set(solvedRowList), [solvedRowList]);
   const solvedCols = useMemo(() => new Set(solvedColList), [solvedColList]);
 
-  // Shuffle unsolved words on mount and when solved groups change
+  // Shuffle all words in unsolved rows (regardless of column status)
+  // This prevents solved columns from revealing row groupings
   useEffect(() => {
     const unsolved: string[] = [];
     for (let r = 0; r < 4; r++) {
       if (solvedRows.has(r)) continue;
       for (let c = 0; c < 4; c++) {
-        if (solvedCols.has(c)) continue;
         unsolved.push(puzzle.matrix[r][c]);
       }
     }
@@ -56,58 +56,54 @@ export function useGame(puzzle: Puzzle) {
     let unsolvedIdx = 0;
     const result: GridCell[][] = [];
 
+    // Helper to look up a word's actual row/col in the matrix
+    const findWordPos = (word: string) => {
+      for (let r = 0; r < 4; r++)
+        for (let c = 0; c < 4; c++)
+          if (puzzle.matrix[r][c] === word) return { r, c };
+      return { r: 0, c: 0 };
+    };
+
     for (let dr = 0; dr < 4; dr++) {
       const row: GridCell[] = [];
       for (let dc = 0; dc < 4; dc++) {
-        let actualRow: number;
-        let actualCol: number;
-        let rowSolved = false;
-        let colSolved = false;
 
         if (dr < nSR && dc < nSC) {
-          // Intersection of solved row and solved col
-          actualRow = solvedRowList[dr];
-          actualCol = solvedColList[dc];
-          rowSolved = true;
-          colSolved = true;
+          // Intersection of solved row and solved col — locked position
+          const actualRow = solvedRowList[dr];
+          const actualCol = solvedColList[dc];
+          row.push({
+            word: puzzle.matrix[actualRow][actualCol],
+            rowSolved: true,
+            colSolved: true,
+            rowDifficulty: puzzle.rows[actualRow].difficulty,
+            colDifficulty: puzzle.columns[actualCol].difficulty,
+          });
         } else if (dr < nSR) {
-          // Solved row, unsolved col position
-          actualRow = solvedRowList[dr];
-          actualCol = unsolvedColIndices[dc - nSC];
-          rowSolved = true;
-        } else if (dc < nSC) {
-          // Unsolved row, solved col position
-          actualRow = unsolvedRowIndices[dr - nSR];
-          actualCol = solvedColList[dc];
-          colSolved = true;
+          // Solved row, unsolved col — show word in its row (row is already revealed)
+          const actualRow = solvedRowList[dr];
+          const actualCol = unsolvedColIndices[dc - nSC];
+          row.push({
+            word: puzzle.matrix[actualRow][actualCol],
+            rowSolved: true,
+            colSolved: false,
+            rowDifficulty: puzzle.rows[actualRow].difficulty,
+            colDifficulty: puzzle.columns[actualCol].difficulty,
+          });
         } else {
-          // Both unsolved — use shuffled word
+          // Unsolved row (regardless of col status) — use shuffled word
+          // This prevents solved columns from revealing row groupings
           const word = unsolvedShuffle[unsolvedIdx] || '';
           unsolvedIdx++;
-          // Find the actual row/col for difficulty lookups
-          let aR = 0, aC = 0;
-          for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-              if (puzzle.matrix[r][c] === word) { aR = r; aC = c; }
-            }
-          }
+          const pos = findWordPos(word);
           row.push({
             word,
             rowSolved: false,
             colSolved: false,
-            rowDifficulty: puzzle.rows[aR].difficulty,
-            colDifficulty: puzzle.columns[aC].difficulty,
+            rowDifficulty: puzzle.rows[pos.r].difficulty,
+            colDifficulty: puzzle.columns[pos.c].difficulty,
           });
-          continue;
         }
-
-        row.push({
-          word: puzzle.matrix[actualRow][actualCol],
-          rowSolved,
-          colSolved,
-          rowDifficulty: puzzle.rows[actualRow].difficulty,
-          colDifficulty: puzzle.columns[actualCol].difficulty,
-        });
       }
       result.push(row);
     }
@@ -200,37 +196,7 @@ export function useGame(puzzle: Puzzle) {
       } else {
         newSolvedColList.push(match.index);
       }
-      let newSolvedOrder = [...solvedOrder, match];
-
-      // Auto-complete the other dimension if one is fully solved
-      if (newSolvedRowList.length === 4 && newSolvedColList.length < 4) {
-        for (let c = 0; c < 4; c++) {
-          if (!new Set(newSolvedColList).has(c)) {
-            newSolvedColList.push(c);
-            newSolvedOrder.push({
-              partition: 'col',
-              index: c,
-              theme: puzzle.columns[c].theme,
-              words: puzzle.columns[c].words,
-              difficulty: puzzle.columns[c].difficulty,
-            });
-          }
-        }
-      }
-      if (newSolvedColList.length === 4 && newSolvedRowList.length < 4) {
-        for (let r = 0; r < 4; r++) {
-          if (!new Set(newSolvedRowList).has(r)) {
-            newSolvedRowList.push(r);
-            newSolvedOrder.push({
-              partition: 'row',
-              index: r,
-              theme: puzzle.rows[r].theme,
-              words: puzzle.rows[r].words,
-              difficulty: puzzle.rows[r].difficulty,
-            });
-          }
-        }
-      }
+      const newSolvedOrder = [...solvedOrder, match];
 
       setSolvedRowList(newSolvedRowList);
       setSolvedColList(newSolvedColList);
