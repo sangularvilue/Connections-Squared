@@ -144,26 +144,26 @@ export function validatePuzzle(puzzle: Puzzle): string[] {
 
 const FALLBACK_PUZZLES: Puzzle[] = [
   {
-    id: 'demo-1',
-    date: '2026-03-17',
-    title: 'Connections² #1',
+    id: 'square-one',
+    date: '2026-03-22',
+    title: 'Square One',
     rows: [
-      { theme: 'Parts of a book', words: ['SPINE', 'JACKET', 'LEAF', 'APPENDIX'], difficulty: 0 },
-      { theme: '___ market', words: ['BULL', 'FLEA', 'BEAR', 'STOCK'], difficulty: 1 },
-      { theme: 'Starts a famous pair', words: ['SALT', 'BREAD', 'THUNDER', 'ROCK'], difficulty: 2 },
-      { theme: 'Olympic events', words: ['DIVING', 'FENCING', 'ROWING', 'SHOT'], difficulty: 3 },
+      { theme: 'White ___', words: ['CHRISTMAS', 'PAGES', 'SUPREMACY', 'LIGHT'], difficulty: 0 },
+      { theme: 'Relative ___', words: ['POVERTY', 'MOTION', 'STATE', 'POWER'], difficulty: 1 },
+      { theme: 'Running ___', words: ['DRUGS', 'NUMBERS', 'JUMP', 'BATH'], difficulty: 2 },
+      { theme: 'Hidden ___', words: ['TERROR', 'CAMERA', 'FIELD', 'TREASURE'], difficulty: 3 },
     ],
     columns: [
-      { theme: 'Wall Street lingo', words: ['SPINE', 'BULL', 'SALT', 'DIVING'], difficulty: 0 },
-      { theme: 'Medieval things', words: ['JACKET', 'FLEA', 'BREAD', 'FENCING'], difficulty: 1 },
-      { theme: 'Sounds like weather', words: ['LEAF', 'BEAR', 'THUNDER', 'ROWING'], difficulty: 2 },
-      { theme: '___ put', words: ['APPENDIX', 'STOCK', 'ROCK', 'SHOT'], difficulty: 3 },
+      { theme: 'War on ___', words: ['CHRISTMAS', 'POVERTY', 'DRUGS', 'TERROR'], difficulty: 0 },
+      { theme: 'Apple software', words: ['PAGES', 'MOTION', 'NUMBERS', 'CAMERA'], difficulty: 1 },
+      { theme: 'Quantum ___', words: ['SUPREMACY', 'STATE', 'JUMP', 'FIELD'], difficulty: 2 },
+      { theme: '___ house', words: ['LIGHT', 'POWER', 'BATH', 'TREASURE'], difficulty: 3 },
     ],
     matrix: [
-      ['SPINE',  'JACKET',  'LEAF',    'APPENDIX'],
-      ['BULL',   'FLEA',    'BEAR',    'STOCK'],
-      ['SALT',   'BREAD',   'THUNDER', 'ROCK'],
-      ['DIVING', 'FENCING', 'ROWING',  'SHOT'],
+      ['CHRISTMAS', 'PAGES',   'SUPREMACY', 'LIGHT'],
+      ['POVERTY',   'MOTION',  'STATE',     'POWER'],
+      ['DRUGS',     'NUMBERS', 'JUMP',      'BATH'],
+      ['TERROR',    'CAMERA',  'FIELD',     'TREASURE'],
     ],
   },
 ];
