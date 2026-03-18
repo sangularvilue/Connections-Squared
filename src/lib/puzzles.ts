@@ -15,7 +15,7 @@ async function getSupabase() {
   }
 }
 
-function parseDbPuzzle(row: any): Puzzle {
+function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?: string } {
   return {
     id: row.id,
     date: row.date,
@@ -23,7 +23,9 @@ function parseDbPuzzle(row: any): Puzzle {
     rows: row.rows as Category[],
     columns: row.columns as Category[],
     matrix: row.matrix as string[][],
-  };
+    is_custom: row.is_custom,
+    creator_name: row.creator_name,
+  } as any;
 }
 
 export async function getAllPuzzlesAsync(): Promise<Puzzle[]> {
@@ -59,7 +61,7 @@ export async function getPuzzleAsync(id: string): Promise<Puzzle | undefined> {
 
 // === Admin functions ===
 
-export async function savePuzzle(puzzle: Puzzle): Promise<{ error?: string }> {
+export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorName?: string }): Promise<{ error?: string }> {
   const sb = await getSupabase();
   if (!sb) return { error: 'Supabase not configured' };
 
@@ -73,6 +75,8 @@ export async function savePuzzle(puzzle: Puzzle): Promise<{ error?: string }> {
       columns: puzzle.columns,
       matrix: puzzle.matrix,
       published: true,
+      is_custom: puzzle.isCustom || false,
+      creator_name: puzzle.creatorName || null,
       updated_at: new Date().toISOString(),
     });
 
