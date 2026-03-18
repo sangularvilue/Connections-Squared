@@ -24,22 +24,33 @@ export function useGame(puzzle: Puzzle) {
 
   // For shuffling the unsolved words
   const [unsolvedShuffle, setUnsolvedShuffle] = useState<string[]>([]);
+  // For shuffling solved-col words in unsolved rows (keyed by col index)
+  const [colShuffles, setColShuffles] = useState<Record<number, string[]>>({});
 
   const solvedRows = useMemo(() => new Set(solvedRowList), [solvedRowList]);
   const solvedCols = useMemo(() => new Set(solvedColList), [solvedColList]);
 
-  // Shuffle all words in unsolved rows (regardless of column status)
-  // This prevents solved columns from revealing row groupings
+  // Shuffle unsolved words and solved-column orderings when groups change
   useEffect(() => {
+    const unsolvedRowIdxs = [0, 1, 2, 3].filter(r => !solvedRows.has(r));
+
+    // Shuffle words in unsolved rows + unsolved cols
     const unsolved: string[] = [];
-    for (let r = 0; r < 4; r++) {
-      if (solvedRows.has(r)) continue;
+    for (const r of unsolvedRowIdxs) {
       for (let c = 0; c < 4; c++) {
+        if (solvedCols.has(c)) continue;
         unsolved.push(puzzle.matrix[r][c]);
       }
     }
     setUnsolvedShuffle(shuffleArray(unsolved));
-  }, [puzzle, solvedRows, solvedCols]);
+
+    // For each solved column, shuffle the unsolved-row words within that column
+    const newColShuffles: Record<number, string[]> = {};
+    for (const ci of solvedColList) {
+      newColShuffles[ci] = shuffleArray(unsolvedRowIdxs.map(ri => puzzle.matrix[ri][ci]));
+    }
+    setColShuffles(newColShuffles);
+  }, [puzzle, solvedRows, solvedCols, solvedColList]);
 
   const gameOver = solvedRowList.length === 4 && solvedColList.length === 4;
 
@@ -53,16 +64,8 @@ export function useGame(puzzle: Puzzle) {
     // For solved cols, figure out which unsolved row indices fill the bottom
     const unsolvedRowIndices = [0, 1, 2, 3].filter(r => !solvedRows.has(r));
 
-    let unsolvedIdx = 0;
     const result: GridCell[][] = [];
-
-    // Helper to look up a word's actual row/col in the matrix
-    const findWordPos = (word: string) => {
-      for (let r = 0; r < 4; r++)
-        for (let c = 0; c < 4; c++)
-          if (puzzle.matrix[r][c] === word) return { r, c };
-      return { r: 0, c: 0 };
-    };
+    let unsolvedIdx = 0;
 
     for (let dr = 0; dr < 4; dr++) {
       const row: GridCell[] = [];
@@ -80,7 +83,7 @@ export function useGame(puzzle: Puzzle) {
             colDifficulty: puzzle.columns[actualCol].difficulty,
           });
         } else if (dr < nSR) {
-          // Solved row, unsolved col — show word in its row (row is already revealed)
+          // Solved row, unsolved col — locked in row
           const actualRow = solvedRowList[dr];
           const actualCol = unsolvedColIndices[dc - nSC];
           row.push({
@@ -90,25 +93,43 @@ export function useGame(puzzle: Puzzle) {
             rowDifficulty: puzzle.rows[actualRow].difficulty,
             colDifficulty: puzzle.columns[actualCol].difficulty,
           });
+        } else if (dc < nSC) {
+          // Unsolved row, solved col — stays in column but row order shuffled
+          const actualCol = solvedColList[dc];
+          const word = (colShuffles[actualCol] || [])[dr - nSR] || '';
+          // Look up the word's actual row for difficulty
+          let actualRow = 0;
+          for (const ri of unsolvedRowIndices) {
+            if (puzzle.matrix[ri][actualCol] === word) { actualRow = ri; break; }
+          }
+          row.push({
+            word,
+            rowSolved: false,
+            colSolved: true,
+            rowDifficulty: puzzle.rows[actualRow].difficulty,
+            colDifficulty: puzzle.columns[actualCol].difficulty,
+          });
         } else {
-          // Unsolved row (regardless of col status) — use shuffled word
-          // This prevents solved columns from revealing row groupings
+          // Unsolved row + unsolved col — fully shuffled
           const word = unsolvedShuffle[unsolvedIdx] || '';
           unsolvedIdx++;
-          const pos = findWordPos(word);
+          let aR = 0, aC = 0;
+          for (let r = 0; r < 4; r++)
+            for (let c = 0; c < 4; c++)
+              if (puzzle.matrix[r][c] === word) { aR = r; aC = c; }
           row.push({
             word,
             rowSolved: false,
             colSolved: false,
-            rowDifficulty: puzzle.rows[pos.r].difficulty,
-            colDifficulty: puzzle.columns[pos.c].difficulty,
+            rowDifficulty: puzzle.rows[aR].difficulty,
+            colDifficulty: puzzle.columns[aC].difficulty,
           });
         }
       }
       result.push(row);
     }
     return result;
-  }, [puzzle, solvedRowList, solvedColList, solvedRows, solvedCols, unsolvedShuffle]);
+  }, [puzzle, solvedRowList, solvedColList, solvedRows, solvedCols, unsolvedShuffle, colShuffles]);
 
   // Row/col theme headers for the display
   const rowHeaders = useMemo(() => {
@@ -152,6 +173,14 @@ export function useGame(puzzle: Puzzle) {
 
   const shuffle = useCallback(() => {
     setUnsolvedShuffle(prev => shuffleArray(prev));
+    // Also re-shuffle solved-column orderings
+    setColShuffles(prev => {
+      const next: Record<number, string[]> = {};
+      for (const [ci, words] of Object.entries(prev)) {
+        next[Number(ci)] = shuffleArray(words);
+      }
+      return next;
+    });
   }, []);
 
   const findMatch = useCallback((words: Set<string>): SolvedGroup | null => {
