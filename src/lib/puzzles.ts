@@ -28,14 +28,14 @@ function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?:
   } as any;
 }
 
-export async function getAllPuzzlesAsync(): Promise<Puzzle[]> {
+export async function getAllPuzzlesAsync(includePrivate = false): Promise<Puzzle[]> {
   const sb = await getSupabase();
   if (sb) {
-    const { data, error } = await sb
-      .from('puzzles')
-      .select('*')
-      .eq('published', true)
-      .order('date', { ascending: false });
+    let query = sb.from('puzzles').select('*').order('date', { ascending: false });
+    if (!includePrivate) {
+      query = query.eq('published', true);
+    }
+    const { data, error } = await query;
     if (!error && data && data.length > 0) {
       return data.map(parseDbPuzzle);
     }

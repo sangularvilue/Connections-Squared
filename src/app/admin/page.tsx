@@ -8,6 +8,9 @@ import PuzzleBuilder from '../../components/PuzzleBuilder';
 import { Puzzle } from '../../types';
 import { savePuzzle, deletePuzzle, getAllPuzzlesAsync } from '../../lib/puzzles';
 
+const ROW_COLORS = ['#f9df6d', '#f4a259', '#e07a7a', '#d4a0d4'];
+const COL_COLORS = ['#a0c35a', '#6ec6c6', '#7ea8e0', '#b0a0e0'];
+
 function AdminContent() {
   const searchParams = useSearchParams();
   const key = searchParams.get('key');
@@ -41,7 +44,7 @@ function AdminDashboard() {
 
   const loadPuzzles = useCallback(async () => {
     setLoading(true);
-    const data = await getAllPuzzlesAsync();
+    const data = await getAllPuzzlesAsync(true);
     setPuzzles(data);
     setLoading(false);
   }, []);
@@ -115,35 +118,97 @@ function AdminDashboard() {
       ) : puzzles.length === 0 ? (
         <p className="opacity-40">No puzzles yet.</p>
       ) : (
-        <div className="w-full flex flex-col gap-2">
+        <div className="w-full flex flex-col gap-3">
           {puzzles.map(p => (
-            <div
+            <PuzzleCard
               key={p.id}
-              className="flex items-center justify-between rounded-lg p-3"
-              style={{ backgroundColor: 'var(--tile-bg)' }}
-            >
-              <div>
-                <div className="font-bold text-sm">{p.title || p.id}</div>
-                <div className="text-xs opacity-50">{p.date} &middot; {p.id}</div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setEditing(p); setShowBuilder(true); }}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border"
-                  style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer"
-                  style={{ backgroundColor: '#e07a7a', color: '#1a1a1a', border: 'none' }}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+              puzzle={p}
+              onEdit={() => { setEditing(p); setShowBuilder(true); }}
+              onDelete={() => handleDelete(p.id)}
+            />
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PuzzleCard({ puzzle, onEdit, onDelete }: { puzzle: Puzzle; onEdit: () => void; onDelete: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const isPrivate = !(puzzle as any).published && (puzzle as any).published !== undefined;
+  const isCustom = (puzzle as any).is_custom;
+
+  return (
+    <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--tile-bg)' }}>
+      <div className="flex items-center justify-between p-3">
+        <div className="flex-1 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+          <div className="font-bold text-sm flex items-center gap-2">
+            {puzzle.title || puzzle.id}
+            {isPrivate && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--border)' }}>Private</span>}
+            {isCustom && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#6ec6c6' }}>Community</span>}
+          </div>
+          <div className="text-xs opacity-50">
+            {puzzle.date} &middot; {puzzle.id}
+            {(puzzle as any).creator_name && ` &middot; by ${(puzzle as any).creator_name}`}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border"
+            style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
+          >
+            {expanded ? 'Hide' : 'Solution'}
+          </button>
+          <button
+            onClick={onEdit}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border"
+            style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
+          >
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer"
+            style={{ backgroundColor: '#e07a7a', color: '#1a1a1a', border: 'none' }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="px-3 pb-3">
+          <div className="grid gap-1" style={{ gridTemplateColumns: '80px repeat(4, 1fr)' }}>
+            {/* Corner */}
+            <div />
+            {/* Column headers */}
+            {puzzle.columns.map((col, c) => (
+              <div key={`ch-${c}`} className="rounded-t px-1 py-1 text-center" style={{ backgroundColor: COL_COLORS[c], color: '#1a1a1a' }}>
+                <span className="font-bold text-[9px] uppercase">{col.theme}</span>
+              </div>
+            ))}
+            {/* Rows */}
+            {puzzle.rows.map((row, r) => (
+              <div key={`row-${r}`} className="contents">
+                <div className="rounded-l px-1 py-1.5 flex items-center justify-center text-center" style={{ backgroundColor: ROW_COLORS[r], color: '#1a1a1a' }}>
+                  <span className="font-bold text-[9px] uppercase leading-tight">{row.theme}</span>
+                </div>
+                {puzzle.matrix[r].map((word, c) => (
+                  <div
+                    key={`cell-${r}-${c}`}
+                    className="rounded flex items-center justify-center text-center py-1.5 font-bold text-[10px] uppercase"
+                    style={{
+                      background: `linear-gradient(135deg, ${ROW_COLORS[r]}88 40%, ${COL_COLORS[c]}88 60%)`,
+                      color: '#1a1a1a',
+                    }}
+                  >
+                    {word}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
