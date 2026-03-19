@@ -15,7 +15,7 @@ export interface GridCell {
 
 export function useGame(puzzle: Puzzle) {
   const size = puzzle.size || 4;
-  const indices = Array.from({ length: size }, (_, i) => i);
+  const indices = useMemo(() => Array.from({ length: size }, (_, i) => i), [size]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [solvedRowList, setSolvedRowList] = useState<number[]>([]); // row indices in solve order

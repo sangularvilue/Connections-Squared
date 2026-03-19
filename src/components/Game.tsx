@@ -71,10 +71,10 @@ function GameInner({ puzzle }: { puzzle: Puzzle }) {
         className="w-full"
         style={{
           display: 'grid',
-          gridTemplateColumns: hasRowHeaders ? '64px repeat(${size}, 1fr)' : 'repeat(${size}, 1fr)',
+          gridTemplateColumns: hasRowHeaders ? `64px repeat(${size}, 1fr)` : `repeat(${size}, 1fr)`,
           gridTemplateRows: hasColHeaders
-            ? '40px repeat(4, 60px)'
-            : 'repeat(4, 60px)',
+            ? `40px repeat(${size}, 60px)`
+            : `repeat(${size}, 60px)`,
           gap: '5px',
           animation: shaking ? 'shake 0.4s ease-in-out' : undefined,
         }}
@@ -178,7 +178,7 @@ function GameInner({ puzzle }: { puzzle: Puzzle }) {
           </button>
           <button
             onClick={submitGuess}
-            disabled={selected.size !== 4}
+            disabled={selected.size !== size}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
             style={{
               backgroundColor: selected.size === size ? 'var(--foreground)' : 'var(--tile-bg)',
