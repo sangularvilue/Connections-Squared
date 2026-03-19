@@ -39,36 +39,40 @@ export default function HowToPlay() {
 
             <div className="flex flex-col gap-3 text-sm" style={{ lineHeight: 1.6 }}>
               <p>
-                Find groups of four words that share a theme — but in <strong>two dimensions</strong>.
+                Find groups of words that share a theme — but in <strong>two dimensions</strong>.
               </p>
 
               <p>
-                There are <strong>16 words</strong> arranged in a 4&times;4 grid. They are divided into
-                groups by <strong>two</strong> different sets of categories — think of them as
+                Puzzles come in two sizes: a <strong>4&times;4</strong> grid (16 words) or
+                a <strong>3&times;3</strong> grid (9 words). Words are divided into groups
+                by <strong>two</strong> different sets of categories — think of them as
                 rows and columns.
               </p>
 
               <p>
                 Each word belongs to exactly <strong>one row category</strong> and
-                exactly <strong>one column category</strong>. Your job is to find all 8 groups
-                (4 row groups + 4 column groups).
+                exactly <strong>one column category</strong>. In a 4&times;4 puzzle, find
+                all 8 groups (4 row + 4 column). In a 3&times;3 puzzle, find all 6 groups
+                (3 row + 3 column).
               </p>
 
               <h3 className="font-bold mt-1">Gameplay</h3>
 
               <ul className="flex flex-col gap-1.5" style={{ paddingLeft: '1.2em' }}>
-                <li>Select 4 words and tap <strong>Submit</strong>.</li>
-                <li>If all 4 share a category, the group is revealed and the words
+                <li>Select the right number of words (4 for a 4&times;4 puzzle, 3 for a
+                  3&times;3 puzzle) and tap <strong>Submit</strong>.</li>
+                <li>If they all share a category, the group is revealed and the words
                   get highlighted — but they stay on the board for the other dimension.</li>
                 <li>Row groups appear across the <strong>top</strong>. Column groups appear
                   down the <strong>left</strong>.</li>
-                <li>If 3 of your 4 are correct, you&apos;ll see <strong>&ldquo;One away!&rdquo;</strong></li>
+                <li>In 4&times;4 puzzles, if 3 of your 4 are correct, you&apos;ll
+                  see <strong>&ldquo;One away!&rdquo;</strong></li>
               </ul>
 
               <h3 className="font-bold mt-1">Goal</h3>
 
               <p>
-                Find all 8 groups. Your score is the total number of guesses — lower is better.
+                Find all groups. Your score is the total number of guesses — lower is better.
               </p>
             </div>
           </div>

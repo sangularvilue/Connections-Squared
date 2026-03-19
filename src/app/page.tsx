@@ -24,7 +24,7 @@ export default function HomePage() {
     <div className="flex flex-col items-center min-h-screen px-4 py-8 max-w-lg mx-auto">
       <Logo />
       <p className="text-sm mt-2 mb-4 opacity-60 text-center">
-        Find groups of four — in two dimensions
+        Find groups of words — in two dimensions
       </p>
 
       {/* Tabs */}

@@ -23,7 +23,7 @@ const serif = Noto_Serif({
 
 export const metadata: Metadata = {
   title: 'Connections²',
-  description: 'Find groups of four — in two dimensions',
+  description: 'Find groups of words — in two dimensions',
 };
 
 export default function RootLayout({
