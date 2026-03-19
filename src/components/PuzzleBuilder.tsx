@@ -13,7 +13,12 @@ interface PuzzleBuilderProps {
   saveLabel?: string;
   onCancel?: () => void;
   showMeta?: boolean;
+  showSizeToggle?: boolean;
   children?: React.ReactNode; // extra controls above the save button
+}
+
+function makeEmpty(n: number): string[][] {
+  return Array.from({ length: n }, () => Array(n).fill(''));
 }
 
 export default function PuzzleBuilder({
@@ -22,17 +27,27 @@ export default function PuzzleBuilder({
   saveLabel = 'Save Puzzle',
   onCancel,
   showMeta = true,
+  showSizeToggle = false,
   children,
 }: PuzzleBuilderProps) {
+  const initSize = initial?.size || initial?.matrix?.length || 4;
+  const [size, setSize] = useState(initSize);
   const [matrix, setMatrix] = useState<string[][]>(
-    initial?.matrix || [['','','',''],['','','',''],['','','',''],['','','','']]
+    initial?.matrix || makeEmpty(initSize)
   );
   const [rowThemes, setRowThemes] = useState(
-    initial?.rows.map(r => r.theme) || ['', '', '', '']
+    initial?.rows.map(r => r.theme) || Array(initSize).fill('')
   );
   const [colThemes, setColThemes] = useState(
-    initial?.columns.map(c => c.theme) || ['', '', '', '']
+    initial?.columns.map(c => c.theme) || Array(initSize).fill('')
   );
+
+  const handleSizeChange = (newSize: number) => {
+    setSize(newSize);
+    setMatrix(makeEmpty(newSize));
+    setRowThemes(Array(newSize).fill(''));
+    setColThemes(Array(newSize).fill(''));
+  };
   const [puzzleId, setPuzzleId] = useState(initial?.id || '');
   const [puzzleDate, setPuzzleDate] = useState(initial?.date || new Date().toISOString().slice(0, 10));
   const [puzzleTitle, setPuzzleTitle] = useState(initial?.title || '');
@@ -45,10 +60,12 @@ export default function PuzzleBuilder({
   };
 
   const handleSave = () => {
+    const indices = Array.from({ length: size }, (_, i) => i);
     const puzzle: Puzzle = {
       id: puzzleId || `custom-${Date.now()}`,
       date: puzzleDate,
       title: puzzleTitle || undefined,
+      size,
       rows: rowThemes.map((theme, r) => ({
         theme,
         words: matrix[r],
@@ -56,7 +73,7 @@ export default function PuzzleBuilder({
       })),
       columns: colThemes.map((theme, c) => ({
         theme,
-        words: [0, 1, 2, 3].map(r => matrix[r][c]),
+        words: indices.map(r => matrix[r][c]),
         difficulty: c,
       })),
       matrix,
@@ -77,6 +94,24 @@ export default function PuzzleBuilder({
 
   return (
     <div className="w-full flex flex-col items-center">
+      {showSizeToggle && (
+        <div className="flex gap-0 mb-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          {[3, 4].map(n => (
+            <button
+              key={n}
+              onClick={() => handleSizeChange(n)}
+              className="px-4 py-2 text-sm font-semibold cursor-pointer border-0"
+              style={{
+                backgroundColor: size === n ? 'var(--foreground)' : 'transparent',
+                color: size === n ? 'var(--background)' : 'var(--foreground)',
+              }}
+            >
+              {n}x{n}
+            </button>
+          ))}
+        </div>
+      )}
+
       {showMeta && (
         <div className="w-full flex flex-col gap-3 mb-5">
           <div className="flex gap-3">
@@ -108,7 +143,7 @@ export default function PuzzleBuilder({
 
       {/* Matrix editor */}
       <div className="w-full">
-        <div className="grid gap-1" style={{ gridTemplateColumns: '100px repeat(4, 1fr)' }}>
+        <div className="grid gap-1" style={{ gridTemplateColumns: `100px repeat(${size}, 1fr)` }}>
           <div />
           {colThemes.map((theme, c) => (
             <div key={`ct-${c}`} className="flex flex-col gap-0.5">

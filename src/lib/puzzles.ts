@@ -20,6 +20,7 @@ function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?:
     id: row.id,
     date: row.date,
     title: row.title,
+    size: row.size || 4,
     rows: row.rows as Category[],
     columns: row.columns as Category[],
     matrix: row.matrix as string[][],
@@ -71,6 +72,7 @@ export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorN
       id: puzzle.id,
       date: puzzle.date,
       title: puzzle.title,
+      size: puzzle.size || 4,
       rows: puzzle.rows,
       columns: puzzle.columns,
       matrix: puzzle.matrix,
@@ -110,14 +112,16 @@ export function shuffleArray<T>(array: T[]): T[] {
 
 export function validatePuzzle(puzzle: Puzzle): string[] {
   const errors: string[] = [];
+  const size = puzzle.size || 4;
+  const indices = Array.from({ length: size }, (_, i) => i);
 
-  if (puzzle.rows.length !== 4) errors.push('Must have exactly 4 row groups');
-  if (puzzle.columns.length !== 4) errors.push('Must have exactly 4 column groups');
-  if (puzzle.matrix.length !== 4) errors.push('Matrix must have 4 rows');
+  if (puzzle.rows.length !== size) errors.push(`Must have exactly ${size} row groups`);
+  if (puzzle.columns.length !== size) errors.push(`Must have exactly ${size} column groups`);
+  if (puzzle.matrix.length !== size) errors.push(`Matrix must have ${size} rows`);
 
   const allWords = new Set<string>();
   for (const row of puzzle.matrix) {
-    if (row.length !== 4) errors.push('Each matrix row must have 4 words');
+    if (row.length !== size) errors.push(`Each matrix row must have ${size} words`);
     for (const word of row) {
       if (!word) errors.push('All cells must be filled');
       if (allWords.has(word)) errors.push(`Duplicate word: ${word}`);
@@ -125,7 +129,7 @@ export function validatePuzzle(puzzle: Puzzle): string[] {
     }
   }
 
-  for (let r = 0; r < 4; r++) {
+  for (let r = 0; r < size; r++) {
     const matrixRow = new Set(puzzle.matrix[r]);
     const groupWords = new Set(puzzle.rows[r]?.words);
     if (![...matrixRow].every(w => groupWords.has(w))) {
@@ -133,8 +137,8 @@ export function validatePuzzle(puzzle: Puzzle): string[] {
     }
   }
 
-  for (let c = 0; c < 4; c++) {
-    const matrixCol = new Set([0, 1, 2, 3].map(r => puzzle.matrix[r]?.[c]));
+  for (let c = 0; c < size; c++) {
+    const matrixCol = new Set(indices.map(r => puzzle.matrix[r]?.[c]));
     const groupWords = new Set(puzzle.columns[c]?.words);
     if (![...matrixCol].every(w => groupWords.has(w))) {
       errors.push(`Column ${c} group words don't match matrix column`);

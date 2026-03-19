@@ -8,8 +8,9 @@ export interface Puzzle {
   id: string;
   date: string; // YYYY-MM-DD
   title?: string;
-  rows: Category[];    // partition P — 4 groups of 4
-  columns: Category[]; // partition Q — 4 groups of 4
+  size?: number;       // 3 or 4 (default 4)
+  rows: Category[];    // partition P — N groups of N
+  columns: Category[]; // partition Q — N groups of N
   // matrix[r][c] = the unique word in rows[r] ∩ columns[c]
   matrix: string[][];
 }

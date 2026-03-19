@@ -58,6 +58,7 @@ export default function CreatePage() {
           onSave={handleCreate}
           saveLabel="Create Puzzle"
           showMeta={false}
+          showSizeToggle={true}
         >
           <div className="w-full mt-4 flex flex-col gap-3">
             <input

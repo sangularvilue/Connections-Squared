@@ -27,6 +27,7 @@ export default function Game({ puzzle }: { puzzle: Puzzle }) {
 function GameInner({ puzzle }: { puzzle: Puzzle }) {
   const {
     selected,
+    size,
     guesses,
     gameOver,
     message,
@@ -70,7 +71,7 @@ function GameInner({ puzzle }: { puzzle: Puzzle }) {
         className="w-full"
         style={{
           display: 'grid',
-          gridTemplateColumns: hasRowHeaders ? '64px repeat(4, 1fr)' : 'repeat(4, 1fr)',
+          gridTemplateColumns: hasRowHeaders ? '64px repeat(${size}, 1fr)' : 'repeat(${size}, 1fr)',
           gridTemplateRows: hasColHeaders
             ? '40px repeat(4, 60px)'
             : 'repeat(4, 60px)',
@@ -180,10 +181,10 @@ function GameInner({ puzzle }: { puzzle: Puzzle }) {
             disabled={selected.size !== 4}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
             style={{
-              backgroundColor: selected.size === 4 ? 'var(--foreground)' : 'var(--tile-bg)',
-              color: selected.size === 4 ? 'var(--background)' : 'var(--foreground)',
-              opacity: selected.size === 4 ? 1 : 0.4,
-              cursor: selected.size === 4 ? 'pointer' : 'not-allowed',
+              backgroundColor: selected.size === size ? 'var(--foreground)' : 'var(--tile-bg)',
+              color: selected.size === size ? 'var(--background)' : 'var(--foreground)',
+              opacity: selected.size === size ? 1 : 0.4,
+              cursor: selected.size === size ? 'pointer' : 'not-allowed',
               border: 'none',
             }}
           >

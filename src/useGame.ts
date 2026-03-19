@@ -14,6 +14,9 @@ export interface GridCell {
 }
 
 export function useGame(puzzle: Puzzle) {
+  const size = puzzle.size || 4;
+  const indices = Array.from({ length: size }, (_, i) => i);
+
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [solvedRowList, setSolvedRowList] = useState<number[]>([]); // row indices in solve order
   const [solvedColList, setSolvedColList] = useState<number[]>([]); // col indices in solve order
@@ -34,12 +37,12 @@ export function useGame(puzzle: Puzzle) {
 
   // Shuffle unsolved words and solved-column orderings when groups change
   useEffect(() => {
-    const unsolvedRowIdxs = [0, 1, 2, 3].filter(r => !solvedRows.has(r));
+    const unsolvedRowIdxs = indices.filter(r => !solvedRows.has(r));
 
     // Shuffle words in unsolved rows + unsolved cols
     const unsolved: string[] = [];
     for (const r of unsolvedRowIdxs) {
-      for (let c = 0; c < 4; c++) {
+      for (const c of indices) {
         if (solvedCols.has(c)) continue;
         unsolved.push(puzzle.matrix[r][c]);
       }
@@ -54,32 +57,30 @@ export function useGame(puzzle: Puzzle) {
     setColShuffles(newColShuffles);
 
     // For each solved row, shuffle the unsolved-col words within that row
-    const unsolvedColIdxs = [0, 1, 2, 3].filter(c => !solvedCols.has(c));
+    const unsolvedColIdxs = indices.filter(c => !solvedCols.has(c));
     const newRowShuffles: Record<number, string[]> = {};
     for (const ri of solvedRowList) {
       newRowShuffles[ri] = shuffleArray(unsolvedColIdxs.map(ci => puzzle.matrix[ri][ci]));
     }
     setRowShuffles(newRowShuffles);
-  }, [puzzle, solvedRows, solvedCols, solvedColList, solvedRowList]);
+  }, [puzzle, solvedRows, solvedCols, solvedColList, solvedRowList, indices]);
 
-  const gameOver = solvedRowList.length === 4 && solvedColList.length === 4;
+  const gameOver = solvedRowList.length === size && solvedColList.length === size;
 
-  // Build the 4x4 display grid
+  // Build the NxN display grid
   const grid: GridCell[][] = useMemo(() => {
     const nSR = solvedRowList.length;
     const nSC = solvedColList.length;
 
-    // For solved rows, figure out which unsolved col indices fill the right side
-    const unsolvedColIndices = [0, 1, 2, 3].filter(c => !solvedCols.has(c));
-    // For solved cols, figure out which unsolved row indices fill the bottom
-    const unsolvedRowIndices = [0, 1, 2, 3].filter(r => !solvedRows.has(r));
+    const unsolvedColIndices = indices.filter(c => !solvedCols.has(c));
+    const unsolvedRowIndices = indices.filter(r => !solvedRows.has(r));
 
     const result: GridCell[][] = [];
     let unsolvedIdx = 0;
 
-    for (let dr = 0; dr < 4; dr++) {
+    for (let dr = 0; dr < size; dr++) {
       const row: GridCell[] = [];
-      for (let dc = 0; dc < 4; dc++) {
+      for (let dc = 0; dc < size; dc++) {
 
         if (dr < nSR && dc < nSC) {
           // Intersection of solved row and solved col — locked position
@@ -128,8 +129,8 @@ export function useGame(puzzle: Puzzle) {
           const word = unsolvedShuffle[unsolvedIdx] || '';
           unsolvedIdx++;
           let aR = 0, aC = 0;
-          for (let r = 0; r < 4; r++)
-            for (let c = 0; c < 4; c++)
+          for (let r = 0; r < size; r++)
+            for (let c = 0; c < size; c++)
               if (puzzle.matrix[r][c] === word) { aR = r; aC = c; }
           row.push({
             word,
@@ -147,7 +148,7 @@ export function useGame(puzzle: Puzzle) {
 
   // Row/col theme headers for the display
   const rowHeaders = useMemo(() => {
-    return [0, 1, 2, 3].map(dr => {
+    return indices.map(dr => {
       if (dr < solvedRowList.length) {
         const ri = solvedRowList[dr];
         return { theme: puzzle.rows[ri].theme, difficulty: puzzle.rows[ri].difficulty, solved: true };
@@ -157,7 +158,7 @@ export function useGame(puzzle: Puzzle) {
   }, [puzzle, solvedRowList]);
 
   const colHeaders = useMemo(() => {
-    return [0, 1, 2, 3].map(dc => {
+    return indices.map(dc => {
       if (dc < solvedColList.length) {
         const ci = solvedColList[dc];
         return { theme: puzzle.columns[ci].theme, difficulty: puzzle.columns[ci].difficulty, solved: true };
@@ -176,12 +177,12 @@ export function useGame(puzzle: Puzzle) {
       const next = new Set(prev);
       if (next.has(word)) {
         next.delete(word);
-      } else if (next.size < 4) {
+      } else if (next.size < size) {
         next.add(word);
       }
       return next;
     });
-  }, []);
+  }, [size]);
 
   const deselectAll = useCallback(() => setSelected(new Set()), []);
 
@@ -200,35 +201,37 @@ export function useGame(puzzle: Puzzle) {
   }, []);
 
   const findMatch = useCallback((words: Set<string>): SolvedGroup | null => {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < size; i++) {
       if (solvedRows.has(i)) continue;
       const rw = puzzle.rows[i].words;
-      if (rw.every(w => words.has(w)) && words.size === 4) {
+      if (rw.every(w => words.has(w)) && words.size === size) {
         return { partition: 'row', index: i, theme: puzzle.rows[i].theme, words: rw, difficulty: puzzle.rows[i].difficulty };
       }
     }
-    for (let j = 0; j < 4; j++) {
+    for (let j = 0; j < size; j++) {
       if (solvedCols.has(j)) continue;
       const cw = puzzle.columns[j].words;
-      if (cw.every(w => words.has(w)) && words.size === 4) {
+      if (cw.every(w => words.has(w)) && words.size === size) {
         return { partition: 'col', index: j, theme: puzzle.columns[j].theme, words: cw, difficulty: puzzle.columns[j].difficulty };
       }
     }
     return null;
-  }, [puzzle, solvedRows, solvedCols]);
+  }, [puzzle, solvedRows, solvedCols, size]);
 
   const checkOneAway = useCallback((words: Set<string>): boolean => {
-    for (let i = 0; i < 4; i++) {
-      if (!solvedRows.has(i) && puzzle.rows[i].words.filter(w => words.has(w)).length === 3) return true;
+    // No "one away" hint for 3x3 puzzles
+    if (size < 4) return false;
+    for (let i = 0; i < size; i++) {
+      if (!solvedRows.has(i) && puzzle.rows[i].words.filter(w => words.has(w)).length === (size - 1)) return true;
     }
-    for (let j = 0; j < 4; j++) {
-      if (!solvedCols.has(j) && puzzle.columns[j].words.filter(w => words.has(w)).length === 3) return true;
+    for (let j = 0; j < size; j++) {
+      if (!solvedCols.has(j) && puzzle.columns[j].words.filter(w => words.has(w)).length === (size - 1)) return true;
     }
     return false;
-  }, [puzzle, solvedRows, solvedCols]);
+  }, [puzzle, solvedRows, solvedCols, size]);
 
   const submitGuess = useCallback(() => {
-    if (selected.size !== 4) return;
+    if (selected.size !== size) return;
     setGuesses(g => g + 1);
     const newGuesses = guesses + 1;
 
@@ -248,7 +251,7 @@ export function useGame(puzzle: Puzzle) {
       setSolvedOrder(newSolvedOrder);
       setSelected(new Set());
 
-      if (newSolvedRowList.length === 4 && newSolvedColList.length === 4) {
+      if (newSolvedRowList.length === size && newSolvedColList.length === size) {
         recordPuzzleResult(puzzle.id, newGuesses, newSolvedOrder);
       }
       return;
@@ -265,6 +268,7 @@ export function useGame(puzzle: Puzzle) {
   }, [selected, findMatch, checkOneAway, showMessage, guesses, solvedRowList, solvedColList, solvedOrder, puzzle.id]);
 
   return {
+    size,
     selected,
     solvedRows,
     solvedCols,
