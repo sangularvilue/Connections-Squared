@@ -13,9 +13,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllPuzzlesAsync().then(puzzles => {
-      setOfficialPuzzles(puzzles.filter(p => !(p as any).is_custom));
-      setCustomPuzzles(puzzles.filter(p => (p as any).is_custom));
+    getAllPuzzlesAsync(true).then(puzzles => {
+      setOfficialPuzzles(puzzles.filter(p => (p as any).published !== false && !(p as any).is_custom));
+      setCustomPuzzles(puzzles.filter(p => (p as any).published === false || (p as any).is_custom));
       setLoading(false);
     });
   }, []);
