@@ -15,12 +15,13 @@ async function getSupabase() {
   }
 }
 
-function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?: string } {
+function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?: string; published?: boolean } {
   return {
     id: row.id,
     date: row.date,
     title: row.title,
     size: row.size || 4,
+    published: row.published,
     rows: row.rows as Category[],
     columns: row.columns as Category[],
     matrix: row.matrix as string[][],
