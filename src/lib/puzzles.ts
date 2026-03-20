@@ -86,6 +86,19 @@ export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorN
   return {};
 }
 
+export async function setPublished(id: string, published: boolean): Promise<{ error?: string }> {
+  const sb = await getSupabase();
+  if (!sb) return { error: 'Supabase not configured' };
+
+  const { error } = await sb
+    .from('puzzles')
+    .update({ published, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function deletePuzzle(id: string): Promise<{ error?: string }> {
   const sb = await getSupabase();
   if (!sb) return { error: 'Supabase not configured' };

@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import Logo from '../../components/Logo';
 import PuzzleBuilder from '../../components/PuzzleBuilder';
 import { Puzzle } from '../../types';
-import { savePuzzle, deletePuzzle, getAllPuzzlesAsync } from '../../lib/puzzles';
+import { savePuzzle, deletePuzzle, setPublished, getAllPuzzlesAsync } from '../../lib/puzzles';
 
 const ROW_COLORS = ['#f9df6d', '#f4a259', '#e07a7a', '#d4a0d4'];
 const COL_COLORS = ['#a0c35a', '#6ec6c6', '#7ea8e0', '#b0a0e0'];
@@ -76,6 +76,17 @@ function AdminDashboard() {
     setTimeout(() => setStatusMsg(''), 3000);
   };
 
+  const handleTogglePublish = async (id: string, published: boolean) => {
+    const result = await setPublished(id, published);
+    if (result.error) {
+      setStatusMsg(`Error: ${result.error}`);
+    } else {
+      setStatusMsg(published ? 'Published!' : 'Moved to community');
+      loadPuzzles();
+    }
+    setTimeout(() => setStatusMsg(''), 3000);
+  };
+
   if (showBuilder) {
     return (
       <div className="flex flex-col items-center min-h-screen px-4 py-6 max-w-2xl mx-auto">
@@ -88,6 +99,7 @@ function AdminDashboard() {
           onSave={handleSave}
           onCancel={() => { setShowBuilder(false); setEditing(null); }}
           showMeta={true}
+          showSizeToggle={true}
         />
       </div>
     );
@@ -125,6 +137,7 @@ function AdminDashboard() {
               puzzle={p}
               onEdit={() => { setEditing(p); setShowBuilder(true); }}
               onDelete={() => handleDelete(p.id)}
+              onTogglePublish={() => handleTogglePublish(p.id, !(p as any).published)}
             />
           ))}
         </div>
@@ -133,9 +146,10 @@ function AdminDashboard() {
   );
 }
 
-function PuzzleCard({ puzzle, onEdit, onDelete }: { puzzle: Puzzle; onEdit: () => void; onDelete: () => void }) {
+function PuzzleCard({ puzzle, onEdit, onDelete, onTogglePublish }: { puzzle: Puzzle; onEdit: () => void; onDelete: () => void; onTogglePublish: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const isPrivate = !(puzzle as any).published && (puzzle as any).published !== undefined;
+  const isPublished = (puzzle as any).published !== false;
+  const isPrivate = !isPublished;
   const isCustom = (puzzle as any).is_custom;
 
   return (
@@ -159,6 +173,17 @@ function PuzzleCard({ puzzle, onEdit, onDelete }: { puzzle: Puzzle; onEdit: () =
             style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
           >
             {expanded ? 'Hide' : 'Solution'}
+          </button>
+          <button
+            onClick={onTogglePublish}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border"
+            style={{
+              borderColor: isPublished ? '#f4a259' : '#a0c35a',
+              color: isPublished ? '#f4a259' : '#a0c35a',
+              background: 'transparent',
+            }}
+          >
+            {isPublished ? 'Unpublish' : 'Publish'}
           </button>
           <button
             onClick={onEdit}
