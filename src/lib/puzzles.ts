@@ -46,6 +46,21 @@ export async function getAllPuzzlesAsync(includePrivate = false): Promise<Puzzle
   return [...FALLBACK_PUZZLES].sort((a, b) => b.date.localeCompare(a.date));
 }
 
+export async function getUnpublishedPuzzlesAsync(): Promise<Puzzle[]> {
+  const sb = await getSupabase();
+  if (sb) {
+    const { data, error } = await sb
+      .from('puzzles')
+      .select('*')
+      .eq('published', false)
+      .order('date', { ascending: false });
+    if (!error && data) {
+      return data.map(parseDbPuzzle);
+    }
+  }
+  return [];
+}
+
 export async function getPuzzleAsync(id: string): Promise<Puzzle | undefined> {
   const sb = await getSupabase();
   if (sb) {

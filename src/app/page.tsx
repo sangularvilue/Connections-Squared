@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Logo from '../components/Logo';
-import { getAllPuzzlesAsync } from '../lib/puzzles';
+import { getAllPuzzlesAsync, getUnpublishedPuzzlesAsync } from '../lib/puzzles';
 import { Puzzle } from '../types';
 
 export default function HomePage() {
@@ -13,9 +13,18 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllPuzzlesAsync(true).then(puzzles => {
-      setOfficialPuzzles(puzzles.filter(p => (p as any).published !== false && !(p as any).is_custom));
-      setCustomPuzzles(puzzles.filter(p => (p as any).published === false || (p as any).is_custom));
+    Promise.all([
+      getAllPuzzlesAsync(),
+      getUnpublishedPuzzlesAsync(),
+    ]).then(([published, unpublished]) => {
+      setOfficialPuzzles(published.filter(p => !(p as any).is_custom));
+      const community = [
+        ...published.filter(p => (p as any).is_custom),
+        ...unpublished,
+      ];
+      setCustomPuzzles(community);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
   }, []);
