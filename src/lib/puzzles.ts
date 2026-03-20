@@ -91,10 +91,19 @@ export async function setPublished(id: string, published: boolean): Promise<{ er
   const sb = await getSupabase();
   if (!sb) return { error: 'Supabase not configured' };
 
+  // Fetch the full puzzle first, then upsert with updated published status
+  // (upsert works with existing RLS policies; update may not)
+  const { data, error: fetchError } = await sb
+    .from('puzzles')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !data) return { error: fetchError?.message || 'Puzzle not found' };
+
   const { error } = await sb
     .from('puzzles')
-    .update({ published, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .upsert({ ...data, published, updated_at: new Date().toISOString() });
 
   if (error) return { error: error.message };
   return {};
