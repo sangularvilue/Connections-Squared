@@ -102,12 +102,12 @@ export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorN
   return {};
 }
 
-export async function setPublished(id: string, published: boolean): Promise<{ error?: string }> {
+export type Visibility = 'published' | 'community' | 'private';
+
+export async function setVisibility(id: string, visibility: Visibility): Promise<{ error?: string }> {
   const sb = await getSupabase();
   if (!sb) return { error: 'Supabase not configured' };
 
-  // Fetch the full puzzle first, then upsert with updated published status
-  // (upsert works with existing RLS policies; update may not)
   const { data, error: fetchError } = await sb
     .from('puzzles')
     .select('*')
@@ -116,12 +116,21 @@ export async function setPublished(id: string, published: boolean): Promise<{ er
 
   if (fetchError || !data) return { error: fetchError?.message || 'Puzzle not found' };
 
-  const { error } = await sb
-    .from('puzzles')
-    .upsert({ ...data, published, updated_at: new Date().toISOString() });
+  const updates = {
+    ...data,
+    published: visibility !== 'private',
+    is_custom: visibility === 'community',
+    updated_at: new Date().toISOString(),
+  };
 
+  const { error } = await sb.from('puzzles').upsert(updates);
   if (error) return { error: error.message };
   return {};
+}
+
+/** @deprecated Use setVisibility instead */
+export async function setPublished(id: string, published: boolean): Promise<{ error?: string }> {
+  return setVisibility(id, published ? 'published' : 'private');
 }
 
 export async function deletePuzzle(id: string): Promise<{ error?: string }> {

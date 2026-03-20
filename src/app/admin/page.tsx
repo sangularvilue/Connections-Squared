@@ -6,7 +6,8 @@ import { Suspense } from 'react';
 import Logo from '../../components/Logo';
 import PuzzleBuilder from '../../components/PuzzleBuilder';
 import { Puzzle } from '../../types';
-import { savePuzzle, deletePuzzle, setPublished, getAllPuzzlesAsync } from '../../lib/puzzles';
+import { savePuzzle, deletePuzzle, setVisibility, getAllPuzzlesAsync } from '../../lib/puzzles';
+import type { Visibility } from '../../lib/puzzles';
 
 const ROW_COLORS = ['#f9df6d', '#f4a259', '#e07a7a', '#d4a0d4'];
 const COL_COLORS = ['#a0c35a', '#6ec6c6', '#7ea8e0', '#b0a0e0'];
@@ -76,12 +77,13 @@ function AdminDashboard() {
     setTimeout(() => setStatusMsg(''), 3000);
   };
 
-  const handleTogglePublish = async (id: string, published: boolean) => {
-    const result = await setPublished(id, published);
+  const handleSetVisibility = async (id: string, visibility: Visibility) => {
+    const result = await setVisibility(id, visibility);
     if (result.error) {
       setStatusMsg(`Error: ${result.error}`);
     } else {
-      setStatusMsg(published ? 'Published!' : 'Moved to community');
+      const labels = { published: 'Published!', community: 'Moved to community', private: 'Made private' };
+      setStatusMsg(labels[visibility]);
       loadPuzzles();
     }
     setTimeout(() => setStatusMsg(''), 3000);
@@ -137,7 +139,7 @@ function AdminDashboard() {
               puzzle={p}
               onEdit={() => { setEditing(p); setShowBuilder(true); }}
               onDelete={() => handleDelete(p.id)}
-              onTogglePublish={() => handleTogglePublish(p.id, !(p as any).published)}
+              onSetVisibility={(v) => handleSetVisibility(p.id, v)}
             />
           ))}
         </div>
@@ -146,11 +148,21 @@ function AdminDashboard() {
   );
 }
 
-function PuzzleCard({ puzzle, onEdit, onDelete, onTogglePublish }: { puzzle: Puzzle; onEdit: () => void; onDelete: () => void; onTogglePublish: () => void }) {
+function getVisibility(puzzle: Puzzle): Visibility {
+  if ((puzzle as any).published === false) return 'private';
+  if ((puzzle as any).is_custom) return 'community';
+  return 'published';
+}
+
+const VISIBILITY_CONFIG: Record<Visibility, { label: string; color: string }> = {
+  published: { label: 'Published', color: '#a0c35a' },
+  community: { label: 'Community', color: '#6ec6c6' },
+  private: { label: 'Private', color: '#888' },
+};
+
+function PuzzleCard({ puzzle, onEdit, onDelete, onSetVisibility }: { puzzle: Puzzle; onEdit: () => void; onDelete: () => void; onSetVisibility: (v: Visibility) => void }) {
   const [expanded, setExpanded] = useState(false);
-  const isPublished = (puzzle as any).published !== false;
-  const isPrivate = !isPublished;
-  const isCustom = (puzzle as any).is_custom;
+  const visibility = getVisibility(puzzle);
 
   return (
     <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--tile-bg)' }}>
@@ -158,12 +170,16 @@ function PuzzleCard({ puzzle, onEdit, onDelete, onTogglePublish }: { puzzle: Puz
         <div className="flex-1 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="font-bold text-sm flex items-center gap-2">
             {puzzle.title || puzzle.id}
-            {isPrivate && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--border)' }}>Private</span>}
-            {isCustom && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#6ec6c6' }}>Community</span>}
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: VISIBILITY_CONFIG[visibility].color + '33', color: VISIBILITY_CONFIG[visibility].color }}
+            >
+              {VISIBILITY_CONFIG[visibility].label}
+            </span>
           </div>
           <div className="text-xs opacity-50">
             {puzzle.date} &middot; {puzzle.id}
-            {(puzzle as any).creator_name && ` &middot; by ${(puzzle as any).creator_name}`}
+            {(puzzle as any).creator_name && ` · by ${(puzzle as any).creator_name}`}
           </div>
         </div>
         <div className="flex gap-2">
@@ -173,17 +189,6 @@ function PuzzleCard({ puzzle, onEdit, onDelete, onTogglePublish }: { puzzle: Puz
             style={{ borderColor: 'var(--foreground)', color: 'var(--foreground)', background: 'transparent' }}
           >
             {expanded ? 'Hide' : 'Solution'}
-          </button>
-          <button
-            onClick={onTogglePublish}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border"
-            style={{
-              borderColor: isPublished ? '#f4a259' : '#a0c35a',
-              color: isPublished ? '#f4a259' : '#a0c35a',
-              background: 'transparent',
-            }}
-          >
-            {isPublished ? 'Unpublish' : 'Publish'}
           </button>
           <button
             onClick={onEdit}
@@ -200,6 +205,24 @@ function PuzzleCard({ puzzle, onEdit, onDelete, onTogglePublish }: { puzzle: Puz
             Delete
           </button>
         </div>
+      </div>
+
+      {/* Visibility selector */}
+      <div className="flex gap-0 mx-3 mb-2 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        {(['published', 'community', 'private'] as Visibility[]).map(v => (
+          <button
+            key={v}
+            onClick={() => onSetVisibility(v)}
+            className="flex-1 py-1.5 text-[11px] font-semibold cursor-pointer border-0"
+            style={{
+              backgroundColor: visibility === v ? VISIBILITY_CONFIG[v].color : 'transparent',
+              color: visibility === v ? '#1a1a1a' : 'var(--foreground)',
+              opacity: visibility === v ? 1 : 0.5,
+            }}
+          >
+            {VISIBILITY_CONFIG[v].label}
+          </button>
+        ))}
       </div>
 
       {expanded && (
