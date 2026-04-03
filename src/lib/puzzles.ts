@@ -1,27 +1,25 @@
 import { Puzzle, Category } from '../types';
+import puzzlesData from '../data/puzzles.json';
 
-// === Supabase-backed puzzle fetching ===
+// === JSON-file-backed puzzle data ===
 
-let supabaseClient: any = null;
+// In-memory cache loaded from the JSON file at build/startup time.
+// Admin mutations go through the /api/puzzles route which writes to the JSON file.
+let cachedPuzzles: Puzzle[] | null = null;
 
-async function getSupabase() {
-  if (supabaseClient) return supabaseClient;
-  try {
-    const { supabase } = await import('./supabase');
-    supabaseClient = supabase;
-    return supabase;
-  } catch {
-    return null;
-  }
+function loadPuzzles(): Puzzle[] {
+  if (cachedPuzzles) return cachedPuzzles;
+  cachedPuzzles = (puzzlesData as any[]).map(parsePuzzle);
+  return cachedPuzzles;
 }
 
-function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?: string; published?: boolean } {
+function parsePuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?: string; published?: boolean } {
   return {
     id: row.id,
     date: row.date,
     title: row.title,
     size: row.size || 4,
-    published: row.published,
+    published: row.published ?? true,
     rows: row.rows as Category[],
     columns: row.columns as Category[],
     matrix: row.matrix as string[][],
@@ -31,101 +29,67 @@ function parseDbPuzzle(row: any): Puzzle & { is_custom?: boolean; creator_name?:
 }
 
 export async function getAllPuzzlesAsync(includePrivate = false): Promise<Puzzle[]> {
-  const sb = await getSupabase();
-  if (sb) {
-    let query = sb.from('puzzles').select('*').order('date', { ascending: false });
-    if (!includePrivate) {
-      query = query.eq('published', true);
-    }
-    const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      return data.map(parseDbPuzzle);
-    }
-  }
-  // Fallback to hardcoded
-  return [...FALLBACK_PUZZLES].sort((a, b) => b.date.localeCompare(a.date));
+  const puzzles = loadPuzzles();
+  const filtered = includePrivate ? puzzles : puzzles.filter((p: any) => p.published !== false);
+  return [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function getUnpublishedPuzzlesAsync(): Promise<Puzzle[]> {
-  const sb = await getSupabase();
-  if (sb) {
-    const { data, error } = await sb
-      .from('puzzles')
-      .select('*')
-      .eq('published', false)
-      .order('date', { ascending: false });
-    if (!error && data) {
-      return data.map(parseDbPuzzle);
-    }
-  }
-  return [];
+  const puzzles = loadPuzzles();
+  return puzzles.filter((p: any) => p.published === false);
 }
 
 export async function getPuzzleAsync(id: string): Promise<Puzzle | undefined> {
-  const sb = await getSupabase();
-  if (sb) {
-    const { data, error } = await sb
-      .from('puzzles')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (!error && data) {
-      return parseDbPuzzle(data);
-    }
-  }
-  return FALLBACK_PUZZLES.find(p => p.id === id);
+  const puzzles = loadPuzzles();
+  return puzzles.find(p => p.id === id);
 }
 
-// === Admin functions ===
+// === Admin functions (call API route to persist to JSON file) ===
 
 export async function savePuzzle(puzzle: Puzzle & { isCustom?: boolean; creatorName?: string; isPrivate?: boolean }): Promise<{ error?: string }> {
-  const sb = await getSupabase();
-  if (!sb) return { error: 'Supabase not configured' };
-
-  const { error } = await sb
-    .from('puzzles')
-    .upsert({
-      id: puzzle.id,
-      date: puzzle.date,
-      title: puzzle.title,
-      size: puzzle.size || 4,
-      rows: puzzle.rows,
-      columns: puzzle.columns,
-      matrix: puzzle.matrix,
-      published: !puzzle.isPrivate,
-      is_custom: puzzle.isCustom || false,
-      creator_name: puzzle.creatorName || null,
-      updated_at: new Date().toISOString(),
+  try {
+    const res = await fetch('/api/puzzles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save',
+        puzzle: {
+          id: puzzle.id,
+          date: puzzle.date,
+          title: puzzle.title,
+          size: puzzle.size || 4,
+          rows: puzzle.rows,
+          columns: puzzle.columns,
+          matrix: puzzle.matrix,
+          published: !puzzle.isPrivate,
+          is_custom: puzzle.isCustom || false,
+          creator_name: puzzle.creatorName || null,
+        },
+      }),
     });
-
-  if (error) return { error: error.message };
-  return {};
+    if (!res.ok) return { error: await res.text() };
+    cachedPuzzles = null; // bust cache
+    return {};
+  } catch (e: any) {
+    return { error: e.message };
+  }
 }
 
 export type Visibility = 'published' | 'community' | 'private';
 
 export async function setVisibility(id: string, visibility: Visibility): Promise<{ error?: string }> {
-  const sb = await getSupabase();
-  if (!sb) return { error: 'Supabase not configured' };
-
-  const { data, error: fetchError } = await sb
-    .from('puzzles')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (fetchError || !data) return { error: fetchError?.message || 'Puzzle not found' };
-
-  const updates = {
-    ...data,
-    published: visibility !== 'private',
-    is_custom: visibility === 'community',
-    updated_at: new Date().toISOString(),
-  };
-
-  const { error } = await sb.from('puzzles').upsert(updates);
-  if (error) return { error: error.message };
-  return {};
+  try {
+    const res = await fetch('/api/puzzles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'setVisibility', id, visibility }),
+    });
+    if (!res.ok) return { error: await res.text() };
+    cachedPuzzles = null;
+    return {};
+  } catch (e: any) {
+    return { error: e.message };
+  }
 }
 
 /** @deprecated Use setVisibility instead */
@@ -134,12 +98,18 @@ export async function setPublished(id: string, published: boolean): Promise<{ er
 }
 
 export async function deletePuzzle(id: string): Promise<{ error?: string }> {
-  const sb = await getSupabase();
-  if (!sb) return { error: 'Supabase not configured' };
-
-  const { error } = await sb.from('puzzles').delete().eq('id', id);
-  if (error) return { error: error.message };
-  return {};
+  try {
+    const res = await fetch('/api/puzzles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id }),
+    });
+    if (!res.ok) return { error: await res.text() };
+    cachedPuzzles = null;
+    return {};
+  } catch (e: any) {
+    return { error: e.message };
+  }
 }
 
 // === Sync helpers (for client components that already have data) ===
@@ -194,31 +164,3 @@ export function validatePuzzle(puzzle: Puzzle): string[] {
 
   return errors;
 }
-
-// === Fallback hardcoded puzzle ===
-
-const FALLBACK_PUZZLES: Puzzle[] = [
-  {
-    id: 'square-one',
-    date: '2026-03-22',
-    title: 'Square One',
-    rows: [
-      { theme: 'White ___', words: ['CHRISTMAS', 'PAGES', 'SUPREMACY', 'LIGHT'], difficulty: 0 },
-      { theme: 'Relative ___', words: ['POVERTY', 'MOTION', 'STATE', 'POWER'], difficulty: 1 },
-      { theme: 'Running ___', words: ['DRUGS', 'NUMBERS', 'JUMP', 'BATH'], difficulty: 2 },
-      { theme: 'Hidden ___', words: ['TERROR', 'CAMERA', 'FIELD', 'TREASURE'], difficulty: 3 },
-    ],
-    columns: [
-      { theme: 'War on ___', words: ['CHRISTMAS', 'POVERTY', 'DRUGS', 'TERROR'], difficulty: 0 },
-      { theme: 'Apple software', words: ['PAGES', 'MOTION', 'NUMBERS', 'CAMERA'], difficulty: 1 },
-      { theme: 'Quantum ___', words: ['SUPREMACY', 'STATE', 'JUMP', 'FIELD'], difficulty: 2 },
-      { theme: '___ house', words: ['LIGHT', 'POWER', 'BATH', 'TREASURE'], difficulty: 3 },
-    ],
-    matrix: [
-      ['CHRISTMAS', 'PAGES',   'SUPREMACY', 'LIGHT'],
-      ['POVERTY',   'MOTION',  'STATE',     'POWER'],
-      ['DRUGS',     'NUMBERS', 'JUMP',      'BATH'],
-      ['TERROR',    'CAMERA',  'FIELD',     'TREASURE'],
-    ],
-  },
-];

@@ -1,0 +1,155 @@
+[
+  {
+    "id": "custom-1773971728210",
+    "date": "2026-03-29",
+    "title": "Do the Best Things Come in (Slightly) Smaller Puzzles?",
+    "size": 3,
+    "published": true,
+    "is_custom": false,
+    "creator_name": null,
+    "rows": [
+      { "theme": "Hero Thieves", "words": ["ROBINHOOD", "RAGNAR DANNESKJOLD", "JEAN VALJEAN"], "difficulty": 0 },
+      { "theme": "Louisiana is worse off because of", "words": ["GAMBLING", "KATRINA", "BRIAN KELLY"], "difficulty": 1 },
+      { "theme": "Occupations", "words": ["RUNNING AN AIRLINE", "IRAQ WAR", "EXECUTIONER"], "difficulty": 2 }
+    ],
+    "columns": [
+      { "theme": "Ways to Lose Money Fast", "words": ["ROBINHOOD", "GAMBLING", "RUNNING AN AIRLINE"], "difficulty": 0 },
+      { "theme": "Cost the government a lot of money", "words": ["RAGNAR DANNESKJOLD", "KATRINA", "IRAQ WAR"], "difficulty": 1 },
+      { "theme": "At least partially responsible for innocent deaths", "words": ["JEAN VALJEAN", "BRIAN KELLY", "EXECUTIONER"], "difficulty": 2 }
+    ],
+    "matrix": [
+      ["ROBINHOOD", "RAGNAR DANNESKJOLD", "JEAN VALJEAN"],
+      ["GAMBLING", "KATRINA", "BRIAN KELLY"],
+      ["RUNNING AN AIRLINE", "IRAQ WAR", "EXECUTIONER"]
+    ]
+  },
+  {
+    "id": "square-one",
+    "date": "2026-03-22",
+    "title": "Square One",
+    "size": 4,
+    "published": true,
+    "is_custom": false,
+    "creator_name": null,
+    "rows": [
+      { "theme": "White ___", "words": ["CHRISTMAS", "PAGES", "SUPREMACY", "LIGHT"], "difficulty": 0 },
+      { "theme": "Relative ___", "words": ["POVERTY", "MOTION", "STATE", "POWER"], "difficulty": 1 },
+      { "theme": "Running ___", "words": ["DRUGS", "NUMBERS", "JUMP", "BATH"], "difficulty": 2 },
+      { "theme": "Hidden ___", "words": ["TERROR", "CAMERA", "FIELD", "TREASURE"], "difficulty": 3 }
+    ],
+    "columns": [
+      { "theme": "War on ___", "words": ["CHRISTMAS", "POVERTY", "DRUGS", "TERROR"], "difficulty": 0 },
+      { "theme": "Apple software", "words": ["PAGES", "MOTION", "NUMBERS", "CAMERA"], "difficulty": 1 },
+      { "theme": "Quantum ___", "words": ["SUPREMACY", "STATE", "JUMP", "FIELD"], "difficulty": 2 },
+      { "theme": "___ house", "words": ["LIGHT", "POWER", "BATH", "TREASURE"], "difficulty": 3 }
+    ],
+    "matrix": [
+      ["CHRISTMAS", "PAGES", "SUPREMACY", "LIGHT"],
+      ["POVERTY", "MOTION", "STATE", "POWER"],
+      ["DRUGS", "NUMBERS", "JUMP", "BATH"],
+      ["TERROR", "CAMERA", "FIELD", "TREASURE"]
+    ]
+  },
+  {
+    "id": "custom-1774116200447",
+    "date": "2026-03-21",
+    "title": "Some of these are a stretch",
+    "size": 3,
+    "published": false,
+    "is_custom": true,
+    "creator_name": "WKG",
+    "rows": [
+      { "theme": "Could conceivably put me out of a job, but I'm not worried yet", "words": ["EDOARDO", "AI", "FEDERAL RESERVE"], "difficulty": 0 },
+      { "theme": "In bathrooms", "words": ["BIDET", "BRUSHING YOUR TEETH", "DEODORANT"], "difficulty": 1 },
+      { "theme": "Scandinavian Stereotypes", "words": ["FJORD", "SAUNA", "SOCIALISM"], "difficulty": 2 }
+    ],
+    "columns": [
+      { "theme": " You can't convince me it should be spelled that way", "words": ["EDOARDO", "BIDET", "FJORD"], "difficulty": 0 },
+      { "theme": "Use water", "words": ["AI", "BRUSHING YOUR TEETH", "SAUNA"], "difficulty": 1 },
+      { "theme": "Things that libertarians don't like", "words": ["FEDERAL RESERVE", "DEODORANT", "SOCIALISM"], "difficulty": 2 }
+    ],
+    "matrix": [
+      ["EDOARDO", "AI", "FEDERAL RESERVE"],
+      ["BIDET", "BRUSHING YOUR TEETH", "DEODORANT"],
+      ["FJORD", "SAUNA", "SOCIALISM"]
+    ]
+  },
+  {
+    "id": "custom-1773894764680",
+    "date": "2026-03-19",
+    "title": "ND Things",
+    "size": 3,
+    "published": false,
+    "is_custom": true,
+    "creator_name": "WKG",
+    "rows": [
+      { "theme": "Places to Study", "words": ["HESBURGH UPPER FLOORS", "DCEC", "LAW LIBRARY"], "difficulty": 0 },
+      { "theme": "subterranean access", "words": ["KNIGHTS OF COLOMBUS BASEMENT", "LAFUN", "TUNNELS"], "difficulty": 1 },
+      { "theme": "Too many College Republicans", "words": ["STEDS", "OFF-CAMPUS RETREAT HOUSE", "WINDMOOR"], "difficulty": 2 }
+    ],
+    "columns": [
+      { "theme": "Places to… not study.", "words": ["HESBURGH UPPER FLOORS", "KNIGHTS OF COLOMBUS BASEMENT", "STEDS"], "difficulty": 0 },
+      { "theme": "RtL board has met here", "words": ["DCEC", "LAFUN", "OFF-CAMPUS RETREAT HOUSE"], "difficulty": 1 },
+      { "theme": "Places undergrads aren't supposed to go to", "words": ["LAW LIBRARY", "TUNNELS", "WINDMOOR"], "difficulty": 2 }
+    ],
+    "matrix": [
+      ["HESBURGH UPPER FLOORS", "DCEC", "LAW LIBRARY"],
+      ["KNIGHTS OF COLOMBUS BASEMENT", "LAFUN", "TUNNELS"],
+      ["STEDS", "OFF-CAMPUS RETREAT HOUSE", "WINDMOOR"]
+    ]
+  },
+  {
+    "id": "custom-1773883815722",
+    "date": "2026-03-18",
+    "title": "Puzzle for Carter",
+    "size": 4,
+    "published": false,
+    "is_custom": false,
+    "creator_name": null,
+    "rows": [
+      { "theme": "Instagram of a white girl in 2020", "words": ["BLACK SQUARE", "MASKS", "BIKINIS", "PASTELS"], "difficulty": 0 },
+      { "theme": "Weddings", "words": ["FLOWER GIRL", "TUXEDOS", "UNCOOKED RICE", "PRIEST"], "difficulty": 1 },
+      { "theme": "Bill Clinton has fond memories of them", "words": ["FEMALE TORSO", "EPSTEIN", "LITTLE ST. JAMES", "PEOPLE OTHER THAN HILLARY"], "difficulty": 2 },
+      { "theme": "Deeply Egomaniacal", "words": ["SELF-PORTRAIT", "SEC. NOEM", "NAPOLEON", "POMPOUS"], "difficulty": 3 }
+    ],
+    "columns": [
+      { "theme": "Kazimir Malevich Paintings", "words": ["BLACK SQUARE", "FLOWER GIRL", "FEMALE TORSO", "SELF-PORTRAIT"], "difficulty": 0 },
+      { "theme": "Over-indexed on inappropriate sex", "words": ["MASKS", "TUXEDOS", "EPSTEIN", "SEC. NOEM"], "difficulty": 1 },
+      { "theme": "Small compared to their alternatives", "words": ["BIKINIS", "UNCOOKED RICE", "LITTLE ST. JAMES", "NAPOLEON"], "difficulty": 2 },
+      { "theme": "Starts with P", "words": ["PASTELS", "PRIEST", "PEOPLE OTHER THAN HILLARY", "POMPOUS"], "difficulty": 3 }
+    ],
+    "matrix": [
+      ["BLACK SQUARE", "MASKS", "BIKINIS", "PASTELS"],
+      ["FLOWER GIRL", "TUXEDOS", "UNCOOKED RICE", "PRIEST"],
+      ["FEMALE TORSO", "EPSTEIN", "LITTLE ST. JAMES", "PEOPLE OTHER THAN HILLARY"],
+      ["SELF-PORTRAIT", "SEC. NOEM", "NAPOLEON", "POMPOUS"]
+    ]
+  },
+  {
+    "id": "custom-1773876003485",
+    "date": "2026-03-18",
+    "title": "I wanted to see how hard it was to invent my own ",
+    "size": 4,
+    "published": false,
+    "is_custom": true,
+    "creator_name": "Anonymous",
+    "rows": [
+      { "theme": "Things in Chicago", "words": ["HANCOCK BUILDING", "JEWEL OSCO", "THE BEAN", "TRANS MARKET GROUP"], "difficulty": 0 },
+      { "theme": "Things that make me happy", "words": ["FLOWERS", "MY PLANTS ON THEIR SHELF", "MY ENGAGEMENT RING", "THE NEW RUG WE GOT"], "difficulty": 1 },
+      { "theme": "Heavy things we had to move", "words": ["LAW TEXTBOOKS", "WHITE COUCH", "KITCHEN TABLE", "CAL KING MATTRESS"], "difficulty": 2 },
+      { "theme": "Technology", "words": ["COMPUTER", "ELEVATORS", "OUR PROJECTOR", "GADGETS THAT CONNECT TO WIFI"], "difficulty": 3 }
+    ],
+    "columns": [
+      { "theme": "Things I am looking at right now", "words": ["HANCOCK BUILDING", "FLOWERS", "LAW TEXTBOOKS", "COMPUTER"], "difficulty": 0 },
+      { "theme": "Things I like about our apartment", "words": ["JEWEL OSCO", "MY PLANTS ON THEIR SHELF", "WHITE COUCH", "ELEVATORS"], "difficulty": 1 },
+      { "theme": "Round things", "words": ["THE BEAN", "MY ENGAGEMENT RING", "KITCHEN TABLE", "OUR PROJECTOR"], "difficulty": 2 },
+      { "theme": "Things that Will really likes and I don't understand why he does", "words": ["TRANS MARKET GROUP", "THE NEW RUG WE GOT", "CAL KING MATTRESS", "GADGETS THAT CONNECT TO WIFI"], "difficulty": 3 }
+    ],
+    "matrix": [
+      ["HANCOCK BUILDING", "JEWEL OSCO", "THE BEAN", "TRANS MARKET GROUP"],
+      ["FLOWERS", "MY PLANTS ON THEIR SHELF", "MY ENGAGEMENT RING", "THE NEW RUG WE GOT"],
+      ["LAW TEXTBOOKS", "WHITE COUCH", "KITCHEN TABLE", "CAL KING MATTRESS"],
+      ["COMPUTER", "ELEVATORS", "OUR PROJECTOR", "GADGETS THAT CONNECT TO WIFI"]
+    ]
+  }
+]
